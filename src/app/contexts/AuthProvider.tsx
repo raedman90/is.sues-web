@@ -6,18 +6,18 @@ import api from "@/api/apiClient";
 import { UsersDto } from "@/dtos/UserDTO";
 
 interface AuthContextData {
-  tokenState: string | null;
-  user: UsersDto | null;
-  isAuthenticated: boolean;
-  companyId: string | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, occupation: string, email: string, password: string, adm: boolean, departmentId: string | null) => Promise<void>;
-  signOut: () => void;
-  updateUser: (id: string, name: string, occupation: string, email: string, departmentId: string) => Promise<void>;
-  getEmployeeById: (id: string) => Promise<UsersDto | null>;
-  deleteEmployee: (id: string) => Promise<void>;
-  updateProfilePicture: (id: string, image: File) => Promise<void>;
-}
+    tokenState: string | null;
+    user: UsersDto | null;
+    isAuthenticated: boolean;
+    companyId: string | null;
+    signIn: (email: string, password: string) => Promise<{ userData: UsersDto; companyId: string | null }>; // 🔥 Ajustado para corresponder ao retorno correto
+    signUp: (name: string, occupation: string, email: string, password: string, adm: boolean, departmentId: string | null) => Promise<void>;
+    signOut: () => void;
+    updateUser: (id: string, name: string, occupation: string, email: string, departmentId: string) => Promise<void>;
+    getEmployeeById: (id: string) => Promise<UsersDto | null>;
+    deleteEmployee: (id: string) => Promise<void>;
+    updateProfilePicture: (id: string, image: File) => Promise<void>;
+  }
 
 export const AuthContext = createContext<AuthContextData | undefined>(undefined);
 
@@ -44,28 +44,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadStoredUser();
   }, []);
 
-  async function signIn(email: string, password: string) {
+  async function signIn(email: string, password: string): Promise<{ userData: UsersDto; companyId: string | null }> {
     try {
       const response = await api.post("/signin", { email, password });
       const { token, userAttempAuth } = response.data;
       const userData: UsersDto = userAttempAuth;
-
+  
       let companyId = null;
       try {
         const companyResponse = await api.get(`/company/head/${userData.id}`);
         companyId = companyResponse.data?.id || null;
       } catch {}
-
+  
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("token", token);
       if (companyId) localStorage.setItem("companyId", companyId);
-
+  
       setTokenState(token);
       setUser(userData);
       setCompanyId(companyId);
-
-      router.push("/dashboard");
-    } catch (error: any) {
+  
+      return { userData, companyId };
+    } catch (error) {
       console.error("Erro ao fazer login:", error);
       throw new Error("Erro ao fazer login. Verifique suas credenciais.");
     }

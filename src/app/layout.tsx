@@ -1,5 +1,6 @@
 "use client";
 
+import "@/app/globals.css"; 
 import { AuthProvider } from "@/app/contexts/AuthProvider";
 import { IssuesProvider } from "@/app/contexts/IssuesContext";
 import { CompanyProvider } from "@/app/contexts/CompanyContext";
@@ -11,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt">
       <body className="bg-gray-100">
-        <AuthProvider> {/* Aqui está a correção */}
+        <AuthProvider>
           <CompanyProvider>
             <DepartmentProvider>
               <IssuesProvider>
