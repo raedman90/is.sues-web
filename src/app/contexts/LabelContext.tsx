@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, ReactNode, useState, useEffect } from "react";
 import api from "@/api/apiClient";
 import { LabelDto } from "@/dtos/LabelDTO";

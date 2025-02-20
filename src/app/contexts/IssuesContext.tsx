@@ -1,7 +1,9 @@
+"use client";
+
 import React, { createContext, useState, ReactNode, useContext, useEffect } from "react";
 import { getIssues, updateIssue, createIssues, getAuthorIssue } from "@/api/issues";
 import { Issue } from "@/dtos/IssueDTO";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/app/hooks/useAuth";
 import { getMyIssues } from "@/api/apiUser";
 
 type IssuesContextData = {

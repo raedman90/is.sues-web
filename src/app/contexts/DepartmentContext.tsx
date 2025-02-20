@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useState, ReactNode, useEffect } from "react";
 import api from "@/api/apiClient";
 import { DepartmentDto } from "@/dtos/DepartmentDTO";

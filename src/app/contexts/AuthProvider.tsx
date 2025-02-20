@@ -1,5 +1,7 @@
+"use client";
+
 import { createContext, useEffect, useState, ReactNode } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import api from "@/api/apiClient";
 import { UsersDto } from "@/dtos/UserDTO";
 
