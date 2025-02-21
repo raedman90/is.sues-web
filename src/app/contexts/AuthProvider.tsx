@@ -3,6 +3,7 @@
 import { createContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/api/apiClient";
+import axios from "axios";
 import { UsersDto } from "@/dtos/UserDTO";
 
 interface AuthContextData {
@@ -10,8 +11,8 @@ interface AuthContextData {
     user: UsersDto | null;
     isAuthenticated: boolean;
     companyId: string | null;
-    signIn: (email: string, password: string) => Promise<{ userData: UsersDto; companyId: string | null }>; // 🔥 Ajustado para corresponder ao retorno correto
-    signUp: (name: string, occupation: string, email: string, password: string, adm: boolean, departmentId: string | null) => Promise<void>;
+    signIn: (email: string, password: string) => Promise<{ userData: UsersDto; companyId: string | null }>;
+    signUp: (name: string, occupation: string, email: string, password: string, adm: boolean, departmentId: string | null) => Promise<UsersDto>;
     signOut: () => void;
     updateUser: (id: string, name: string, occupation: string, email: string, departmentId: string) => Promise<void>;
     getEmployeeById: (id: string) => Promise<UsersDto | null>;
@@ -71,14 +72,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  async function signUp(name: string, occupation: string, email: string, password: string, adm: boolean, departmentId: string | null) {
+  async function signUp(
+    name: string,
+    occupation: string,
+    email: string,
+    password: string,
+    isAdmin: boolean,
+    departmentId?: string | null
+  ): Promise<UsersDto> {
     try {
-      await api.post("/users", { name, occupation, email, password, adm, departmentId });
+      const userData: Record<string, any> = {
+        name,
+        occupation,
+        email,
+        password,
+        adm: isAdmin,
+      };
+  
+      if (departmentId) {
+        userData.departmentId = departmentId;
+      }
+  
+      const response = await api.post("/users", userData);
+  
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        throw new Error("Erro ao se registrar. Tente novamente.");
+      }
     } catch (error) {
-      console.error("Erro ao se registrar:", error);
+      console.error("Erro ao fazer registro:", error);
       throw new Error("Erro ao fazer registro. Tente novamente.");
     }
   }
+  
 
   async function updateProfilePicture(id: string, image: File) {
     try {

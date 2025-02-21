@@ -5,7 +5,7 @@ export interface CompanyDto {
     password: string;
     latitude?: number;
     longitude?: number;
-    headid?: string;
-    description?: string|null;
-    departments?: String[];
+    headid?: string | null;
+    description?: string | null;
+    departments?: string[];
 }
