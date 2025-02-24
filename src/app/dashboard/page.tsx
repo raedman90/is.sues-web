@@ -1,3 +1,5 @@
+"use client";
+
 import DashboardLayout from "@/app/layouts/DashboardLayout";
 import { useAuth } from "@/app/hooks/useAuth";
 

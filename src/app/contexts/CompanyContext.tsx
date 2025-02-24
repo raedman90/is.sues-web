@@ -3,6 +3,7 @@
 import React, { createContext, useState, ReactNode, useEffect } from "react";
 import api from "@/api/apiClient";
 import { CompanyDto } from "@/dtos/CompanyDTO";
+import Cookies from "js-cookie";
 
 interface CompanyContextData {
   companies: CompanyDto[];
@@ -45,7 +46,7 @@ export const CompanyProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Função para atualizar uma empresa
   const updateCompany = async (companyId: string, updatedData: Partial<CompanyDto>) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
       if (!token) throw new Error("Token não encontrado");
 
       const response = await api.put(`/company/${companyId}`, updatedData, {

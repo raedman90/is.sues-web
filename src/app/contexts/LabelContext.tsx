@@ -3,6 +3,8 @@
 import React, { createContext, ReactNode, useState, useEffect } from "react";
 import api from "@/api/apiClient";
 import { LabelDto } from "@/dtos/LabelDTO";
+import Cookies from "js-cookie";
+import { useAuth } from "@/app/hooks/useAuth";
 
 interface LabelContextData {
   labels: LabelDto[];
@@ -17,10 +19,10 @@ export const LabelContext = createContext<LabelContextData | undefined>(undefine
 
 export const LabelProvider = ({ children }: { children: ReactNode }) => {
   const [labels, setLabels] = useState<LabelDto[]>([]);
-
+  const { user, tokenState } = useAuth();
   // Recupera o token JWT do localStorage
   const getToken = () => {
-    const token = localStorage.getItem("token");
+    const token = Cookies.get("token");
     if (!token) {
       throw new Error("Token não encontrado");
     }
@@ -105,8 +107,10 @@ export const LabelProvider = ({ children }: { children: ReactNode }) => {
 
   // Carregar labels ao iniciar
   useEffect(() => {
-    loadLabels();
-  }, []);
+    if (tokenState) { // Só carrega se houver um token válido
+      loadLabels();
+    }
+  }, [tokenState]);
 
   return (
     <LabelContext.Provider value={{ labels, loadLabels, createLabel, updateLabel, deleteLabel, getLabelById }}>

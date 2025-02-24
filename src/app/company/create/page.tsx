@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCompany } from "@/app/hooks/useCompany";
 import { CompanyDto } from "@/dtos/CompanyDTO";
@@ -64,10 +64,12 @@ export default function CreateCompany() {
 
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-        <CompanyMap onLocationSelect={(lat, lng) => {
-          setLatitude(lat);
-          setLongitude(lng);
-        }} />
+        <CompanyMap
+          onLocationSelect={(lat, lng) => {
+            setLatitude(lat);
+            setLongitude(lng);
+          }}
+        />
 
         <div className="space-y-4 mt-4">
           <input

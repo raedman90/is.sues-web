@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
+import Link from "next/link";
 import { FaHome, FaBuilding, FaPlusSquare, FaTasks, FaUser } from "react-icons/fa";
 
 const menuItems = [
@@ -15,10 +16,22 @@ const menuItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { tokenState } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    if (!tokenState) {
+      console.warn("🔴 Usuário não autenticado! Redirecionando para login...");
+      router.push("/login");
+    }
+  }, [tokenState, router]);
+
   if (!tokenState) {
-    return null; // O usuário será redirecionado para login no middleware
+    return (
+      <div className="flex justify-center items-center min-h-screen text-gray-600">
+        Redirecionando para login...
+      </div>
+    );
   }
 
   return (
@@ -26,7 +39,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1">{children}</main>
       <nav className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around py-3 shadow-md">
         {menuItems.map(({ name, path, icon }) => (
-          <Link key={name} href={path} className={`flex flex-col items-center text-gray-600 ${pathname === path ? "text-blue-500" : ""}`}>
+          <Link
+            key={name}
+            href={path}
+            className={`flex flex-col items-center text-gray-600 ${pathname === path ? "text-blue-500" : ""}`}
+          >
             {icon}
             <span className="text-xs">{name}</span>
           </Link>

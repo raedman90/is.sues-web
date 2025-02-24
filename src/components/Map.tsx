@@ -5,6 +5,17 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import * as L from "leaflet";
 
+
+const customIcon = new L.Icon({
+  iconUrl: "/images/marker-icon.png",
+  iconRetinaUrl: "/images/marker-icon-2x.png",
+  shadowUrl: "/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 interface MapProps {
   onLocationSelect: (lat: number, lng: number) => void;
 }
@@ -45,24 +56,14 @@ export default function CompanyMap({ onLocationSelect }: MapProps) {
 
   return (
     <div className="h-96 w-full">
-      <MapContainer
-        center={position || [-23.55052, -46.633308]}
-        zoom={13}
-        className="h-full w-full"
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <LocationMarker />
-      </MapContainer>
+      {position ? (
+        <MapContainer center={position} zoom={13} className="h-full w-full">
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <LocationMarker />
+        </MapContainer>
+      ) : (
+        <p className="text-center text-gray-600">Obtendo localização...</p>
+      )}
     </div>
   );
 }
-
-const customIcon = new L.Icon({
-  iconUrl: "/leaflet/marker-icon.png",
-  iconRetinaUrl: "/leaflet/marker-icon-2x-violet.png",
-  shadowUrl: "/leaflet/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});

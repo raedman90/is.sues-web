@@ -1,17 +1,19 @@
-const authenticateUser = () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (token) {
-        return `Bearer ${token}`;
-      } else {
-        console.warn("Token não encontrado.");
-        return null; // Retorna null para evitar falha nas requisições
-      }
-    } catch (error) {
-      console.error("Erro ao obter token:", error);
+import Cookies from "js-cookie";
+
+const authenticateUser = (): string | null => {
+  try {
+    const token = Cookies.get("token");
+
+    if (!token) {
+      console.warn("⚠️ Token não encontrado.");
       return null;
     }
-  };
-  
-  export default authenticateUser;
-  
+
+    return `Bearer ${token}`;
+  } catch (error) {
+    console.error("❌ Erro ao obter token:", error);
+    return null;
+  }
+};
+
+export default authenticateUser;

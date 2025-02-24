@@ -5,6 +5,7 @@ import { getIssues, updateIssue, createIssues, getAuthorIssue } from "@/api/issu
 import { Issue } from "@/dtos/IssueDTO";
 import { useAuth } from "@/app/hooks/useAuth";
 import { getMyIssues } from "@/api/apiUser";
+import Cookies from "js-cookie";
 
 type IssuesContextData = {
   issues: Issue[];
@@ -23,13 +24,20 @@ type IssuesProviderProps = {
 };
 
 export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, tokenState } = useAuth();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
 
   // Carrega todas as issues
   const loadIssues = async () => {
     try {
+      const token = Cookies.get("token");
+  
+      if (!token) {
+        console.warn("Nenhum token encontrado. Ignorando a carga de issues.");
+        return;
+      }
+  
       const allIssues = await getIssues();
       setIssues(allIssues);
     } catch (error) {
@@ -80,8 +88,10 @@ export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    loadIssues();
-  }, []);
+    if (tokenState) { // Só carrega se houver um token válido
+      loadIssues();
+    }
+  }, [tokenState]);
 
   useEffect(() => {
     if (user?.id) {

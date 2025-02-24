@@ -3,6 +3,7 @@
 import { createContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/api/apiClient";
+import Cookies from "js-cookie";
 import axios from "axios";
 import { UsersDto } from "@/dtos/UserDTO";
 
@@ -32,7 +33,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     async function loadStoredUser() {
       const storedUser = localStorage.getItem("user");
-      const token = localStorage.getItem("token");
+
+      const token = Cookies.get("token");
       const storedCompanyId = localStorage.getItem("companyId");
 
       if (storedUser && token) {
@@ -45,32 +47,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadStoredUser();
   }, []);
 
+
   async function signIn(email: string, password: string): Promise<{ userData: UsersDto; companyId: string | null }> {
     try {
       const response = await api.post("/signin", { email, password });
+
+      if (!response.data?.token || !response.data?.userAttempAuth) {
+        throw new Error("Resposta inválida da API. Nenhum token recebido.");
+      }
+
       const { token, userAttempAuth } = response.data;
       const userData: UsersDto = userAttempAuth;
-  
-      let companyId = null;
+
+      let companyId: string | null = null;
       try {
         const companyResponse = await api.get(`/company/head/${userData.id}`);
         companyId = companyResponse.data?.id || null;
-      } catch {}
-  
+      } catch {
+        console.warn("Nenhuma empresa encontrada para este usuário.");
+      }
+
+      //  Salvar o token em um Cookie (Expira em 7 dias)
+      Cookies.set("token", token, { expires: 7 });
+
+      // Salvar o usuário no LocalStorage para uso no Frontend
       localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("token", token);
       if (companyId) localStorage.setItem("companyId", companyId);
-  
+
+      // Atualizar o contexto de autenticação
       setTokenState(token);
       setUser(userData);
       setCompanyId(companyId);
-  
+
+      console.log("✅ Login bem-sucedido:", userData);
+
       return { userData, companyId };
     } catch (error) {
-      console.error("Erro ao fazer login:", error);
+      console.error("❌ Erro ao fazer login:", error);
       throw new Error("Erro ao fazer login. Verifique suas credenciais.");
     }
   }
+  
 
   async function signUp(
     name: string,
@@ -155,7 +172,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   function signOut() {
-    localStorage.removeItem("token");
+    Cookies.remove("token");
     localStorage.removeItem("user");
     localStorage.removeItem("companyId");
     setTokenState(null);

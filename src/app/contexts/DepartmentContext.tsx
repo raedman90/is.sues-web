@@ -3,6 +3,7 @@
 import React, { createContext, useState, ReactNode, useEffect } from "react";
 import api from "@/api/apiClient";
 import { DepartmentDto } from "@/dtos/DepartmentDTO";
+import Cookies from "js-cookie";
 
 interface DepartmentContextData {
   departments: DepartmentDto[];
@@ -27,22 +28,27 @@ export const DepartmentProvider: React.FC<{ children: ReactNode }> = ({ children
   // Função para carregar todos os departamentos
   const loadDepartments = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token não encontrado");
-
-      const response = await api.get("/departments/all", {
+      const token = Cookies.get("token");
+  
+      if (!token) {
+        console.warn("Nenhum token encontrado. Ignorando a carga de departamentos.");
+        return; // Não tenta carregar se não houver um token
+      }
+  
+      const response = await api.get('/departments/all', {
         headers: { Authorization: `Bearer ${token}` },
       });
+  
       setDepartments(response.data);
     } catch (error) {
       console.error("Erro ao carregar departamentos:", error);
     }
-  };
+  };  
 
   // Criar um novo departamento
   const createDepartment = async (departmentData: DepartmentDto) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
       if (!token) throw new Error("Token não encontrado");
 
       const response = await api.post("/departments/new", departmentData, {
@@ -59,7 +65,7 @@ export const DepartmentProvider: React.FC<{ children: ReactNode }> = ({ children
   // Buscar um departamento pelo ID
   const getDepartmentById = async (id: string): Promise<DepartmentDto | undefined> => {
     try {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
       if (!token) throw new Error("Token não encontrado");
 
       const response = await api.get(`/departments/${id}`, {
@@ -75,7 +81,7 @@ export const DepartmentProvider: React.FC<{ children: ReactNode }> = ({ children
   // Atualizar um departamento
   const updateDepartment = async (id: string, updatedData: Partial<DepartmentDto>) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
       if (!token) throw new Error("Token não encontrado");
 
       await api.put(`/departments/${id}`, updatedData, {
@@ -92,7 +98,7 @@ export const DepartmentProvider: React.FC<{ children: ReactNode }> = ({ children
   // Deletar um departamento
   const deleteDepartment = async (id: string) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
       if (!token) throw new Error("Token não encontrado");
 
       await api.delete(`/departments/${id}`, {
