@@ -1,10 +1,10 @@
-import { useContext } from "react";
-import { IssuesContext } from "@/app/contexts/IssuesContext";
+import { useContext } from 'react';
+import { LabelContext } from '@/app/contexts/LabelContext';
 
-export const useIssues = () => {
-  const context = useContext(IssuesContext);
+export const useLabel = () => {
+  const context = useContext(LabelContext);
   if (!context) {
-    throw new Error("useIssues deve ser usado dentro de um IssuesProvider");
+    throw new Error('useLabel deve ser usado dentro de um LabelProvider');
   }
   return context;
 };

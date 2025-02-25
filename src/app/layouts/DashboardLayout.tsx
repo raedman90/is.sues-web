@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
+import { useCompany } from "@/app/hooks/useCompany";
 import Link from "next/link";
+import Image from "next/image";
 import { FaHome, FaBuilding, FaPlus, FaTasks, FaUser, FaSignOutAlt } from "react-icons/fa";
 
 const menuItems = [
@@ -17,7 +19,8 @@ const issuesMenu = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { tokenState, signOut } = useAuth();
+  const { tokenState, signOut, user } = useAuth();
+  const { companies } = useCompany();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -36,12 +39,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  const userCompany = companies.find((company) => company.headid === user?.id);
+  const isOwner = !!userCompany;
+
   return (
     <div className="flex h-screen bg-[#1B1D21] text-white font-[Poppins]">
       {/* MENU LATERAL */}
       <aside className="w-64 flex flex-col p-6 bg-[#1B1D21] border-r border-gray-700">
+        {/* PERFIL DO USUÁRIO */}
+        <div className="flex flex-col items-center mb-6">
+          <Image
+            src={user?.photo ? `/images/${user.photo}` : "/images/default-avatar.png"}
+            alt="Foto do Usuário"
+            width={60}
+            height={60}
+            className="rounded-full border-2 border-[#7864F4]"
+          />
+          <h2 className="text-lg font-semibold mt-2">{user?.name}</h2>
+          <p className="text-sm text-gray-400">
+            {isOwner ? "Dono da Empresa" : user?.occupation || "Funcionário"}
+          </p>
+          {userCompany && <p className="text-xs text-gray-500">{userCompany.name}</p>}
+        </div>
+
         {/* Título do Menu */}
-        <h2 className="text-lg font-semibold text-gray-400 mb-6">MENU PRINCIPAL</h2>
+        <h2 className="text-lg font-semibold text-gray-400 mb-4">MENU PRINCIPAL</h2>
 
         {/* Itens principais */}
         <nav className="space-y-3">
