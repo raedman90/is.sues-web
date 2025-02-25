@@ -35,3 +35,4 @@ export const getCompanyDepartment = async (departmentId: string): Promise<string
     throw error;
   }
 };
+
