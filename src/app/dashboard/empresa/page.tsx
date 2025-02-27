@@ -5,12 +5,11 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/app/layouts/DashboardLayout";
 import { useAuth } from "@/app/hooks/useAuth";
 import { getCompany } from "@/api/apiCompany";
-import { getDepartmentName } from "@/api/department";
+import { getAllDepartments } from "@/api/department"; 
 import { CompanyDto } from "@/dtos/CompanyDTO";
 import dynamic from "next/dynamic";
 import { FaBuilding, FaEnvelope, FaInfoCircle, FaList, FaTools } from "react-icons/fa";
 
-// Importação dinâmica do mapa para evitar erro no Next.js
 const Map = dynamic(() => import("@/components/company/Map"), { ssr: false });
 
 export default function CompanyPage() {
@@ -31,15 +30,15 @@ export default function CompanyPage() {
 
       setLoading(true);
       try {
-        // Buscar dados da empresa
         const companyData = await getCompany(companyId);
         setCompany(companyData);
 
-        // Se o usuário tiver um departmentId, buscar nome do departamento
-        if (user?.departmentId) {
-          const departmentName = await getDepartmentName(user.departmentId);
-          setDepartments([departmentName]); // Como não há rota para múltiplos departamentos, retorna um array com um único item
-        }
+        const allDepartments = await getAllDepartments();
+        const filteredDepartments = allDepartments
+          .filter((dept) => dept.companyId === companyId)
+          .map((dept) => dept.name);
+
+        setDepartments(filteredDepartments);
       } catch (error) {
         console.error("Erro ao carregar empresa:", error);
       } finally {
@@ -48,7 +47,7 @@ export default function CompanyPage() {
     }
 
     fetchCompanyData();
-  }, [companyId, user?.departmentId]);
+  }, [companyId]);
 
   if (loading) {
     return (
@@ -124,7 +123,7 @@ export default function CompanyPage() {
         </div>
 
         {/* 📌 Container para Conteúdo Alternado */}
-        <div className="p-4 bg-[#2A2D34] rounded-md border border-gray-700 mt-4 w-full max-h-[300px] overflow-y-auto">
+        <div className="p-4 bg-[#2A2D34] rounded-md border border-gray-700 mt-4 w-full max-h-[300px] overflow-y-auto custom-scrollbar">
           {view === "description" ? (
             <>
               <h3 className="text-lg font-semibold mb-2">Descrição da Empresa</h3>

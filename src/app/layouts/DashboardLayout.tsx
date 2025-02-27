@@ -49,11 +49,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* PERFIL DO USUÁRIO */}
         <div className="flex flex-col items-center mb-6">
           <Image
-            src={user?.photo ? `/images/${user.photo}` : "/images/default-avatar.png"}
+            key={user?.photo}
+            src={user?.photo || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"}
             alt="Foto do Usuário"
             width={60}
             height={60}
-            className="rounded-full border-2 border-[#7864F4]"
+            className="rounded-full border-2 border-[#7864F4] object-cover"
           />
           <h2 className="text-lg font-semibold mt-2">{user?.name}</h2>
           <p className="text-sm text-gray-400">
@@ -61,7 +62,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </p>
           {userCompany && <p className="text-xs text-gray-500">{userCompany.name}</p>}
         </div>
-
         {/* Título do Menu */}
         <h2 className="text-lg font-semibold text-gray-400 mb-4">MENU PRINCIPAL</h2>
 

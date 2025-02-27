@@ -32,7 +32,7 @@ export const DepartmentProvider: React.FC<{ children: ReactNode }> = ({ children
   
       if (!token) {
         console.warn("Nenhum token encontrado. Ignorando a carga de departamentos.");
-        return; // Não tenta carregar se não houver um token
+        return;
       }
   
       const response = await api.get('/departments/all', {

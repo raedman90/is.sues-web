@@ -35,4 +35,15 @@ export const getCompanyDepartment = async (departmentId: string): Promise<string
     throw error;
   }
 };
+// Buscar TODOS os departamentos
+export const getAllDepartments = async (): Promise<{ id: string; name: string; companyId: string }[]> => {
+  try {
+    const response = await api.get("/departments/all");
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao buscar departamentos:", error);
+    return [];
+  }
+};
+
 

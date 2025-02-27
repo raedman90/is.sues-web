@@ -6,3 +6,18 @@
 * {
   font-family: "Poppins", sans-serif;
 }
+
+
+/* Estiliza a scrollbar da lista de departamentos */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #765AC6;
+  border-radius: 10px; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

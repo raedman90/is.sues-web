@@ -66,7 +66,7 @@ export default function CompanyAdmin() {
         </h1>
 
         {/* Container com Scroll se necessário */}
-        <div className="flex-grow overflow-auto p-6">
+        <div className="flex-grow overflow-auto p-6 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* Empresa */}
@@ -90,39 +90,47 @@ export default function CompanyAdmin() {
 
             {/* Departamentos */}
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-              className="bg-[#2A2D34] p-4 rounded-lg border border-gray-700 shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+            className="bg-[#2A2D34] p-4 rounded-lg border border-gray-700 shadow-lg"
             >
-              <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-300 mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-300 mb-4">
                 <FaBuilding /> Departamentos
-              </h2>
-              <div className="space-y-3">
+            </h2>
+            <div className="space-y-3">
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full flex items-center gap-3 bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition"
-                  onClick={() => router.push("/dashboard/departamentos/criar")}
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2 }}
+                className="w-full flex items-center gap-3 bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition"
+                onClick={() => router.push("/dashboard/departamentos/criar")}
                 >
-                  <FaPlus /> Criar Departamento
+                <FaPlus /> Criar Departamento
                 </motion.button>
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full flex items-center gap-3 bg-yellow-500 text-white p-3 rounded-md hover:bg-yellow-600 transition"
-                  onClick={() => router.push("/dashboard/departamentos/editar")}
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2 }}
+                className="w-full flex items-center gap-3 bg-yellow-500 text-white p-3 rounded-md hover:bg-yellow-600 transition"
+                onClick={() => router.push("/dashboard/departamentos/editar")}
                 >
-                  <FaEdit /> Editar Departamento
+                <FaEdit /> Editar Departamento
                 </motion.button>
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full flex items-center gap-3 bg-red-500 text-white p-3 rounded-md hover:bg-red-600 transition"
-                  onClick={() => router.push("/dashboard/departamentos/deletar")}
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2 }}
+                className="w-full flex items-center gap-3 bg-red-500 text-white p-3 rounded-md hover:bg-red-600 transition"
+                onClick={() => router.push("/dashboard/departamentos/deletar")}
                 >
-                  <FaTrash /> Apagar Departamento
+                <FaTrash /> Apagar Departamento
                 </motion.button>
-              </div>
+                <motion.button
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2 }}
+                className="w-full flex items-center gap-3 bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition"
+                onClick={() => router.push("/dashboard/departamentos/info")}
+                >
+                <FaList /> Informações do Departamento
+                </motion.button>
+            </div>
             </motion.div>
 
             {/* Funcionários */}

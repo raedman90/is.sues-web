@@ -33,7 +33,7 @@ export default function SignupScreen() {
   
     setLoading(true);
     try {
-      const user: UsersDto = await signUp(name, occupation, email, password, isAdmin, null); // ✅
+      const user: UsersDto = await signUp(name, occupation, email, password, isAdmin, null);
   
       if (user && user.id) { 
         router.push(`/company/create?headid=${user.id}`);
@@ -41,7 +41,7 @@ export default function SignupScreen() {
         throw new Error("Usuário não retornou um ID.");
       }
     } catch (error) {
-      console.error("Erro ao cadastrar usuário:", error); // ✅ Verificando erro detalhado
+      console.error("Erro ao cadastrar usuário:", error);
       setError(`Erro ao cadastrar usuário: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
     } finally {
       setLoading(false);

@@ -88,7 +88,7 @@ export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    if (tokenState) { // Só carrega se houver um token válido
+    if (tokenState) {
       loadIssues();
     }
   }, [tokenState]);

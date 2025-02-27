@@ -36,12 +36,13 @@ export const CompanyProvider: React.FC<{ children: ReactNode }> = ({ children })
   const createCompany = async (companyData: CompanyDto) => {
     try {
       const response = await api.post("/company/new", companyData);
-      setCompanies((prevCompanies) => [...prevCompanies, response.data]); // Adiciona a nova empresa ao estado
+      setCompanies((prevCompanies) => [...prevCompanies, response.data]);
       console.log("Empresa criada com sucesso!");
     } catch (error) {
       console.error("Erro ao criar empresa:", error);
     }
   };
+  
 
   // Função para atualizar uma empresa
   const updateCompany = async (companyId: string, updatedData: Partial<CompanyDto>) => {

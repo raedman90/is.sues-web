@@ -9,7 +9,7 @@ export const verifyAdmin = async (): Promise<boolean> => {
     const userString = localStorage.getItem("user");
     if (userString) {
       const user: UsersDto = JSON.parse(userString);
-      return user.adm; // Assume que `adm` é um booleano indicando se o usuário é admin
+      return user.adm;
     }
     return false;
   } catch (error) {
