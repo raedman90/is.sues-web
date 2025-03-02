@@ -1,117 +1,143 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCompany } from "@/app/hooks/useCompany";
-import { CompanyDto } from "@/dtos/CompanyDTO";
+import { companySchema } from "@/app/schemas/registerCompanySchema";
+import { z } from "zod";
+import { motion } from "framer-motion";
 import CompanyMap from "@/components/Map";
 
 export default function CreateCompany() {
   const router = useRouter();
   const { createCompany } = useCompany();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [description, setDescription] = useState("");
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const headid = new URLSearchParams(window.location.search).get("headid");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    description: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
+    headid: null as string | null,
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const headid = urlParams.get("headid");
+    setFormData((prev) => ({ ...prev, headid }));
+  }, []);
 
   const handleCreateCompany = async () => {
-    setError(null);
-
-    if (!name || !email || !password) {
-      setError("Nome, email e senha são obrigatórios.");
-      return;
-    }
-
-    if (latitude === null || longitude === null) {
-      setError("A localização da empresa é necessária.");
-      return;
-    }
-
-    const companyData: CompanyDto = {
-      name,
-      email,
-      password,
-      headid: headid ?? null,
-      latitude,
-      longitude,
-      description: description || "",
-    };
-
+    setErrors({});
     setLoading(true);
+  
+    // Convertendo null para undefined para compatibilidade com CompanyDto
+    const sanitizedFormData = {
+      ...formData,
+      latitude: formData.latitude ?? undefined,
+      longitude: formData.longitude ?? undefined,
+    };
+  
+    const validation = companySchema.safeParse(sanitizedFormData);
+    if (!validation.success) {
+      const newErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          newErrors[err.path[0]] = err.message;
+        }
+      });
+      setErrors(newErrors);
+      setLoading(false);
+      return;
+    }
+  
     try {
-      await createCompany(companyData);
+      await createCompany(sanitizedFormData);
       alert("Empresa criada com sucesso!");
       router.push("/dashboard");
     } catch (error) {
-      setError("Erro ao criar empresa. Tente novamente.");
+      setErrors({ form: "Erro ao criar empresa. Tente novamente." });
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 p-6">
-      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Criar Empresa</h1>
-        <p className="text-sm text-gray-600 mb-4">Preencha os detalhes da empresa</p>
+    <div className="flex flex-col justify-center items-center min-h-screen bg-[#1B1D21] p-6">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="w-full max-w-md bg-[#24272B] p-6 rounded-lg shadow-lg border border-gray-700"
+      >
+        <h1 className="text-2xl font-bold text-white mb-2">Criar Empresa</h1>
+        <p className="text-sm text-gray-400 mb-4">Preencha os detalhes da empresa</p>
 
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {errors.form && <p className="text-red-400 text-sm mb-4">{errors.form}</p>}
 
         <CompanyMap
           onLocationSelect={(lat, lng) => {
-            setLatitude(lat);
-            setLongitude(lng);
+            setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
           }}
         />
+        {errors.latitude && <p className="text-red-400 text-sm">{errors.latitude}</p>}
+        {errors.longitude && <p className="text-red-400 text-sm">{errors.longitude}</p>}
 
         <div className="space-y-4 mt-4">
           <input
             type="text"
             placeholder="Nome da empresa"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
           />
+          {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
+
           <input
             type="email"
             placeholder="Email da empresa"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
           />
+          {errors.email && <p className="text-red-400 text-sm">{errors.email}</p>}
+
           <input
             type="password"
             placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
           />
+          {errors.password && <p className="text-red-400 text-sm">{errors.password}</p>}
+
           <input
             type="text"
             placeholder="Descrição da empresa"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
           />
 
-          <button
-            onClick={handleCreateCompany}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2 }}
             disabled={loading}
-            className={`w-full py-3 rounded-md font-bold transition hover:shadow-lg ${
-              loading ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-green-500 text-white hover:bg-green-600"
-            }`}
+            className={`w-full py-3 rounded-md font-bold transition transform hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white
+              ${loading ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-green-500 text-white hover:bg-green-600 shadow-green-400"}
+            `}
+            onClick={handleCreateCompany}
           >
             {loading ? "Criando empresa..." : "Criar Empresa"}
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
