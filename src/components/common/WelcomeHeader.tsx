@@ -1,18 +1,26 @@
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 const WelcomeHeader: React.FC = () => {
   return (
-    <div className="text-center space-y-4">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className="text-center space-y-4"
+    >
       <Image
         src="/images/bg1.png"
-        alt="Background"
+        alt="Logo"
         width={250}
         height={250}
-        className="rounded-2xl mx-auto shadow-md"
+        className="rounded-full mx-auto shadow-lg border border-gray-700"
       />
-      <h1 className="text-3xl font-bold text-blue-900">Bem-vindo ao Is.sues</h1>
-      <p className="text-lg text-gray-600">Escolha uma opção abaixo para começar</p>
-    </div>
+      <h1 className="text-3xl font-extrabold text-white drop-shadow-lg">
+        Bem-vindo ao <span className="text-[#765AC6]">Is.sues</span>
+      </h1>
+      <p className="text-lg text-gray-400">Escolha uma opção abaixo para começar</p>
+    </motion.div>
   );
 };
 
