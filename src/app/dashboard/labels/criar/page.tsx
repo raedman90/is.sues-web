@@ -7,7 +7,9 @@ import { useDepartment } from "@/app/hooks/useDepartment";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { FaArrowLeft, FaPlus, FaBuilding, FaCheck } from "react-icons/fa";
+import { FaArrowLeft, FaPlus } from "react-icons/fa";
+import { labelSchema } from "@/app/schemas/labelSchema";
+import { z } from "zod";
 
 export default function CreateLabel() {
   const { createLabel } = useLabel();
@@ -15,9 +17,12 @@ export default function CreateLabel() {
   const { companyId } = useAuth();
   const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    departmentId: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loadingDepartments, setLoadingDepartments] = useState(true);
 
   useEffect(() => {
@@ -30,15 +35,21 @@ export default function CreateLabel() {
   }, []);
 
   const handleCreateLabel = async () => {
-    if (!name || !description || !selectedDepartment) {
-      alert("Todos os campos são obrigatórios.");
+    const validation = labelSchema.safeParse(formData);
+    if (!validation.success) {
+      const newErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          newErrors[err.path[0]] = err.message;
+        }
+      });
+      setErrors(newErrors);
       return;
     }
 
-    const labelData = { name, description, departmentId: selectedDepartment };
-
     try {
-      await createLabel(labelData);
+      await createLabel(formData);
+      setErrors({});
       alert("Label criada com sucesso!");
       router.push("/dashboard/admin");
     } catch (error) {
@@ -49,13 +60,13 @@ export default function CreateLabel() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 text-white flex flex-col gap-6 h-full max-w-3xl mx-auto">
+      <div className="p-6 text-white flex flex-col gap-6 h-full bg-[#1E1E24] overflow-y-auto">
         
         {/* Cabeçalho */}
-        <div className="flex items-center gap-3 border-b border-gray-700 pb-4 w-full">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            transition={{ duration: 0.2 }}
+        <div className="flex items-center gap-3 border-b border-gray-700 pb-4">
+          <motion.button 
+            whileHover={{ scale: 1.1 }} 
+            transition={{ duration: 0.2 }} 
             onClick={() => router.push("/dashboard/admin")}
             className="text-gray-400 hover:text-white transition"
           >
@@ -66,56 +77,59 @@ export default function CreateLabel() {
           </h1>
         </div>
 
-        {/* Container para seleção de departamentos */}
+        {/* Seleção de Departamento */}
         <div className="flex flex-col items-center w-full">
-        <h2 className="text-lg font-semibold text-gray-300 mb-4 text-center">
+          <h2 className="text-lg font-semibold text-gray-300 mb-4 text-center">
             Selecione um Departamento
-        </h2>
+          </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-3xl">
-            {departments
-            .filter(department => department.companyId === companyId)
-            .map((department) => (
-                <div 
-                key={department.id}
-                className="flex flex-col items-center justify-center bg-gray-800 p-4 rounded-lg shadow-md border border-gray-600 hover:bg-gray-700 transition w-full"
-                >
-                <span className="text-white font-medium">{department.name}</span>
-                <button
-                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
-                    onClick={() => setSelectedDepartment(department.id ?? null)}
-                >
-                    Selecionar
-                </button>
-                </div>
-            ))}
-        </div>
+          {loadingDepartments ? (
+            <p className="text-gray-400">Carregando departamentos...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-3xl">
+              {departments
+                .filter(department => department.companyId === companyId)
+                .map((department) => (
+                  <div 
+                    key={department.id}
+                    className={`flex flex-col items-center justify-center p-4 rounded-lg shadow-md border border-gray-600 w-full cursor-pointer
+                      ${formData.departmentId === department.id ? "bg-blue-600" : "bg-gray-800 hover:bg-gray-700"}
+                    `}
+                    onClick={() => setFormData({ ...formData, departmentId: department.id ?? "" })}
+                  >
+                    <span className="text-white font-medium">{department.name}</span>
+                  </div>
+                ))}
+            </div>
+          )}
+          {errors.departmentId && <p className="text-red-400 text-sm mt-2">{errors.departmentId}</p>}
         </div>
 
-        {/* 🔹 Formulário de Criação */}
-        {selectedDepartment && (
+        {/* Formulário de Criação */}
+        {formData.departmentId && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-[#2A2D34] p-6 rounded-lg border border-gray-700 shadow-md mt-6"
+            className="bg-[#2A2D34] p-6 rounded-lg border border-gray-700 shadow-md mt-6 w-full max-w-3xl"
           >
             <h2 className="text-lg font-semibold text-gray-300 mb-4">
               Criar Label para o Departamento
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Nome */}
               <div>
                 <label className="block text-gray-300 mb-2">Nome da Label</label>
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
                   placeholder="Digite o nome da label"
                 />
+                {errors.name && <p className="text-red-400 text-sm mt-2">{errors.name}</p>}
               </div>
 
               {/* Descrição */}
@@ -123,11 +137,12 @@ export default function CreateLabel() {
                 <label className="block text-gray-300 mb-2">Descrição da Label</label>
                 <input
                   type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
                   placeholder="Digite uma descrição"
                 />
+                {errors.description && <p className="text-red-400 text-sm mt-2">{errors.description}</p>}
               </div>
             </div>
 

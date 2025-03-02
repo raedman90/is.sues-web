@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { FaArrowLeft, FaSave } from "react-icons/fa";
 import { CompanyDto } from "@/dtos/CompanyDTO";
 import Popup from "@/components/popup/popup";
+import { companySchema } from "@/app/schemas/companySchema";
 
 export default function EditCompany() {
   const { companyId } = useAuth();
@@ -42,8 +43,11 @@ export default function EditCompany() {
   }, [companyId]);
 
   const handleSaveChanges = async () => {
-    if (!company || !company.name || !company.email) {
-      setPopupMessage("Todos os campos obrigatórios devem ser preenchidos.");
+    if (!company) return;
+
+    const validation = companySchema.safeParse(company);
+    if (!validation.success) {
+      setPopupMessage(validation.error.errors[0].message);
       setShowPopup(true);
       return;
     }
@@ -125,15 +129,21 @@ export default function EditCompany() {
               ></textarea>
             </div>
 
-            {/* Mapa dentro da área scrollável */}
-            <div>
-              <label className="block text-gray-300 mb-2">Localização da Empresa</label>
-              <div className="h-72 overflow-hidden rounded-lg border border-gray-600">
+           {/* Mapa Responsivo */}
+          <div className="relative w-full z-0">
+            <label className="block text-gray-300 mb-2">Localização da Empresa</label>
+            <div className="h-72 overflow-hidden rounded-lg border border-gray-600">
+              {company && (
                 <CompanyMap
-                  onLocationSelect={(lat, lng) => setCompany({ ...company!, latitude: lat, longitude: lng })}
+                  latitude={company.latitude}
+                  longitude={company.longitude}
+                  onLocationSelect={(lat, lng) =>
+                    setCompany((prev) => prev ? { ...prev, latitude: lat, longitude: lng } : prev)
+                  }
                 />
-              </div>
+              )}
             </div>
+          </div>
 
           </div>
 

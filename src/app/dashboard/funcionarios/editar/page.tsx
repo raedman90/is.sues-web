@@ -6,7 +6,9 @@ import { useAuth } from "@/app/hooks/useAuth";
 import { useDepartment } from "@/app/hooks/useDepartment";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { FaEdit, FaArrowLeft, FaUser, FaBuilding, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaEdit, FaArrowLeft, FaUser, FaBuilding } from "react-icons/fa";
+import { editEmployeeSchema } from "@/app/schemas/editEmployeeSchema";
+import { z } from "zod";
 
 export default function EditEmployees() {
   const { companyId, updateUser } = useAuth();
@@ -14,43 +16,59 @@ export default function EditEmployees() {
   const router = useRouter();
 
   const [employees, setEmployees] = useState<any[]>([]);
-  const [loadingEmployees, setLoadingEmployees] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showModal, setShowModal] = useState(false);
-  const [showDepartments, setShowDepartments] = useState(false);
   const [filteredDepartments, setFilteredDepartments] = useState<any[]>([]);
 
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       if (!companyId) return;
-      setLoadingEmployees(true);
+      setLoading(true);
 
       try {
         await loadDepartments();
-
-        const companyDepartments = departments.filter(dept => dept.companyId === companyId);
+        const companyDepartments = departments.filter((dept) => dept.companyId === companyId);
         setFilteredDepartments(companyDepartments);
 
-        if (companyDepartments.length === 0) return;
+        if (companyDepartments.length > 0) {
+          const employeesList = companyDepartments.flatMap((dept) =>
+            dept.users?.map((user) => ({
+              ...user,
+              departmentName: dept.name,
+              departmentId: dept.id,
+            })) || []
+          );
 
-        const employeesList = companyDepartments.flatMap((dept) => 
-          dept.users?.map((user) => ({ ...user, departmentName: dept.name, departmentId: dept.id })) || []
-        );
-
-        setEmployees(employeesList);
+          setEmployees(employeesList);
+        }
       } catch (error) {
         console.error("Erro ao carregar funcionários:", error);
       } finally {
-        setLoadingEmployees(false);
+        setLoading(false);
       }
+    };
+
+    if (companyId) {
+      fetchData();
     }
+  }, [companyId, departments.length]); // 🔹 Atualiza corretamente ao carregar os departamentos
 
-    fetchData();
-  }, [companyId]);
-
-  
   const handleSaveEmployee = async () => {
     if (!selectedEmployee) return;
+
+    const validation = editEmployeeSchema.safeParse(selectedEmployee);
+    if (!validation.success) {
+      const newErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          newErrors[err.path[0]] = err.message;
+        }
+      });
+      setErrors(newErrors);
+      return;
+    }
 
     try {
       await updateUser(
@@ -62,10 +80,11 @@ export default function EditEmployees() {
       );
 
       setEmployees((prev) =>
-        prev.map(emp => (emp.id === selectedEmployee.id ? { ...selectedEmployee } : emp))
+        prev.map((emp) => (emp.id === selectedEmployee.id ? { ...selectedEmployee } : emp))
       );
 
       setShowModal(false);
+      setErrors({});
       alert("Funcionário atualizado com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar funcionário:", error);
@@ -92,8 +111,8 @@ export default function EditEmployees() {
         </div>
 
         {/* Lista de Funcionários */}
-        {loadingEmployees ? (
-          <div className="flex justify-center items-center h-40">Carregando funcionários...</div>
+        {loading ? (
+          <div className="flex justify-center items-center h-40 text-gray-300">Carregando funcionários...</div>
         ) : employees.length > 0 ? (
           <div className="bg-[#2A2D34] p-4 rounded-lg border border-gray-700 max-h-[500px] overflow-y-auto custom-scrollbar">
             <ul className="space-y-3">
@@ -108,8 +127,9 @@ export default function EditEmployees() {
                   </div>
                   <button
                     onClick={() => {
-                      setSelectedEmployee(employee);
+                      setSelectedEmployee({ ...employee });
                       setShowModal(true);
+                      setErrors({});
                     }}
                     className="flex items-center gap-2 bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600 transition"
                   >
@@ -139,60 +159,23 @@ export default function EditEmployees() {
                 onChange={(e) => setSelectedEmployee({ ...selectedEmployee, name: e.target.value })}
                 className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none mb-3"
               />
-
-              {/* Email */}
-              <label className="block text-gray-300 mb-2">Email</label>
-              <input
-                type="email"
-                value={selectedEmployee.email}
-                onChange={(e) => setSelectedEmployee({ ...selectedEmployee, email: e.target.value })}
-                className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none mb-3"
-              />
-
-              {/* Cargo */}
-              <label className="block text-gray-300 mb-2">Cargo</label>
-              <input
-                type="text"
-                value={selectedEmployee.occupation}
-                onChange={(e) => setSelectedEmployee({ ...selectedEmployee, occupation: e.target.value })}
-                className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none mb-3"
-              />
+              {errors.name && <p className="text-red-400 text-sm mb-3">{errors.name}</p>}
 
               {/* Seletor de Departamento */}
               <label className="block text-gray-300 mb-2">Departamento</label>
-              <div
-                className="flex items-center justify-between p-3 bg-gray-800 text-white rounded-md border border-gray-600 cursor-pointer"
-                onClick={() => setShowDepartments(!showDepartments)}
+              <select
+                className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none mb-3"
+                value={selectedEmployee.departmentId}
+                onChange={(e) =>
+                  setSelectedEmployee({ ...selectedEmployee, departmentId: e.target.value })
+                }
               >
-                <span>
-                  {selectedEmployee.departmentId
-                    ? filteredDepartments.find(d => d.id === selectedEmployee.departmentId)?.name || "Departamento não encontrado"
-                    : "Selecionar Departamento"}
-                </span>
-                {showDepartments ? <FaChevronUp /> : <FaChevronDown />}
-              </div>
-
-              {showDepartments && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="bg-gray-800 rounded-md border border-gray-600 max-h-40 overflow-y-auto mt-2 custom-scrollbar"
-                >
-                  {filteredDepartments.map((department) => (
-                    <div
-                      key={department.id}
-                      className="p-3 hover:bg-gray-700 cursor-pointer"
-                      onClick={() => {
-                        setSelectedEmployee({ ...selectedEmployee, departmentId: department.id });
-                        setShowDepartments(false);
-                      }}
-                    >
-                      {department.name}
-                    </div>
-                  ))}
-                </motion.div>
-              )}
+                {filteredDepartments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.name}
+                  </option>
+                ))}
+              </select>
 
               {/* Botões */}
               <div className="flex justify-end mt-4 space-x-4">

@@ -5,7 +5,6 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import * as L from "leaflet";
 
-
 const customIcon = new L.Icon({
   iconUrl: "/images/marker-icon.png",
   iconRetinaUrl: "/images/marker-icon-2x.png",
@@ -17,14 +16,18 @@ const customIcon = new L.Icon({
 });
 
 interface MapProps {
+  latitude?: number;
+  longitude?: number;
   onLocationSelect: (lat: number, lng: number) => void;
 }
 
-export default function CompanyMap({ onLocationSelect }: MapProps) {
+export default function CompanyMap({ latitude, longitude, onLocationSelect }: MapProps) {
   const [position, setPosition] = useState<[number, number] | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "geolocation" in navigator) {
+    if (latitude && longitude) {
+      setPosition([latitude, longitude]);
+    } else if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude;
@@ -37,7 +40,7 @@ export default function CompanyMap({ onLocationSelect }: MapProps) {
         }
       );
     }
-  }, []);
+  }, [latitude, longitude]);
 
   function LocationMarker() {
     useMapEvents({
@@ -49,13 +52,11 @@ export default function CompanyMap({ onLocationSelect }: MapProps) {
       },
     });
 
-    return position ? (
-      <Marker position={position} icon={customIcon} />
-    ) : null;
+    return position ? <Marker position={position} icon={customIcon} /> : null;
   }
 
   return (
-    <div className="h-96 w-full">
+    <div className="h-96 w-full relative z-0">
       {position ? (
         <MapContainer center={position} zoom={13} className="h-full w-full">
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />

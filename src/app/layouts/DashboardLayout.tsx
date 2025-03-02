@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useCompany } from "@/app/hooks/useCompany";
 import Link from "next/link";
 import Image from "next/image";
-import { FaHome, FaBuilding, FaPlus, FaTasks, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { FaBars, FaTimes, FaHome, FaBuilding, FaPlus, FaTasks, FaUser, FaSignOutAlt } from "react-icons/fa";
 
 const menuItems = [
   { name: "Home", path: "/dashboard", icon: <FaHome size={20} /> },
@@ -23,6 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { companies } = useCompany();
   const router = useRouter();
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!tokenState) {
@@ -44,8 +45,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen bg-[#1B1D21] text-white font-[Poppins]">
+      {/* 📌 BOTÃO DE MENU PARA MOBILE */}
+      <button 
+        onClick={() => setMenuOpen(!menuOpen)} 
+        className="md:hidden absolute top-4 left-4 text-white text-2xl z-50"
+      >
+        {menuOpen ? <FaTimes /> : <FaBars />}
+      </button>
+
       {/* MENU LATERAL */}
-      <aside className="w-64 flex flex-col p-6 bg-[#1B1D21] border-r border-gray-700">
+      <aside className={`w-64 flex flex-col p-6 bg-[#1B1D21] border-r border-gray-700 md:relative fixed h-full md:flex ${menuOpen ? "flex" : "hidden"} md:block z-40`}>
         {/* PERFIL DO USUÁRIO */}
         <div className="flex flex-col items-center mb-6">
           <Image
@@ -62,10 +71,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </p>
           {userCompany && <p className="text-xs text-gray-500">{userCompany.name}</p>}
         </div>
-        {/* Título do Menu */}
-        <h2 className="text-lg font-semibold text-gray-400 mb-4">MENU PRINCIPAL</h2>
 
-        {/* Itens principais */}
+        {/* MENU PRINCIPAL */}
         <nav className="space-y-3">
           {menuItems.map(({ name, path, icon }) => (
             <Link
@@ -81,15 +88,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
-        {/* Seção de Issues */}
+        {/* ISSUES */}
         <div className="mt-8">
-          <div className="flex justify-between items-center mb-3 text-gray-400">
-            <span className="text-sm font-semibold">Issues</span>
-            <Link href="/dashboard/issues/criar" className="text-[#7864F4] hover:text-white">
-              <FaPlus size={16} />
-            </Link>
-          </div>
-
+          <span className="text-sm font-semibold text-gray-400">Issues</span>
           <nav className="space-y-3">
             {issuesMenu.map(({ name, path, icon }) => (
               <Link
@@ -106,7 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
         </div>
 
-        {/* Botão de Sair e Perfil */}
+        {/* BOTÕES DE SAIR E PERFIL */}
         <div className="mt-auto space-y-3">
           <button
             onClick={signOut}

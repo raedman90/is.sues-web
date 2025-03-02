@@ -6,28 +6,32 @@ import { useAuth } from "@/app/hooks/useAuth";
 import { useDepartment } from "@/app/hooks/useDepartment";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { FaArrowLeft, FaUserPlus, FaBuilding, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaArrowLeft, FaUserPlus, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { employeeSchema } from "@/app/schemas/employeeSchema";
 import { DepartmentDto } from "@/dtos/DepartmentDTO";
+import { z } from "zod";
 
 export default function CreateEmployee() {
   const { signUp } = useAuth();
   const { departments, loadDepartments } = useDepartment();
   const [filteredDepartments, setFilteredDepartments] = useState<DepartmentDto[]>([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [occupation, setOccupation] = useState("");
-  const [departmentId, setDepartmentId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    occupation: "",
+    departmentId: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showDepartments, setShowDepartments] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Estado para exibir erro no popup
   const router = useRouter();
   const { companyId } = useAuth();
 
   useEffect(() => {
     async function fetchDepartments() {
       await loadDepartments();
-      if (companyId) {
-        const filtered = departments.filter(dept => dept.companyId === companyId);
+      if (companyId && departments.length > 0) {
+        const filtered = departments.filter((dept) => dept.companyId === companyId);
         setFilteredDepartments(filtered);
       }
     }
@@ -35,29 +39,40 @@ export default function CreateEmployee() {
   }, [departments, companyId]);
 
   const handleCreateUser = async () => {
-    if (!name) return setError("O campo Nome é obrigatório.");
-    if (!email) return setError("O campo Email é obrigatório.");
-    if (!password) return setError("O campo Senha é obrigatório.");
-    if (!occupation) return setError("O campo Cargo é obrigatório.");
-    if (!departmentId) return setError("Selecione um Departamento.");
+    const validation = employeeSchema.safeParse(formData);
+    if (!validation.success) {
+      const newErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          newErrors[err.path[0]] = err.message;
+        }
+      });
+      setErrors(newErrors);
+      return;
+    }
 
     try {
-      const isAdmin = false;
-      await signUp(name, occupation, email, password, isAdmin, departmentId);
-      setError(null);
+      await signUp(
+        formData.name,
+        formData.occupation,
+        formData.email,
+        formData.password,
+        false,
+        formData.departmentId
+      );
       router.push("/dashboard/admin");
     } catch (error) {
       console.error(error);
-      setError("Ocorreu um erro ao cadastrar o funcionário.");
+      setErrors({ form: "Ocorreu um erro ao cadastrar o funcionário." });
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="p-6 text-white flex flex-col gap-6 h-full max-w-2xl mx-auto">
+      <div className="p-6 text-white flex flex-col gap-6 h-full bg-[#1E1E24] overflow-y-auto">
         
         {/* Cabeçalho */}
-        <div className="flex items-center gap-3 border-b border-gray-700 pb-4 w-full max-w-3xl">
+        <div className="flex items-center gap-3 border-b border-gray-700 pb-4">
           <motion.button
             whileHover={{ scale: 1.1 }}
             transition={{ duration: 0.2 }}
@@ -71,131 +86,111 @@ export default function CreateEmployee() {
           </h1>
         </div>
 
-        {/* 🔹 Formulário com Scroll Interno */}
-        <div className="w-full max-w-3xl bg-[#2A2D34] p-8 rounded-lg border border-gray-700 shadow-md mt-6">
-          <div className="max-h-[400px] overflow-y-auto custom-scrollbar p-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-              
-              {/* Nome */}
-              <div>
-                <label className="block text-gray-300 mb-2">Nome</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
-                  placeholder="Nome do funcionário"
-                />
+        {/* Formulário */}
+        <div className="w-full max-w-3xl bg-[#2A2D34] p-6 rounded-lg border border-gray-700 shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Nome */}
+            <div className="md:col-span-2">
+              <label className="block text-gray-300 mb-2">Nome</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
+                placeholder="Nome do funcionário"
+              />
+              {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-gray-300 mb-2">Email</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
+                placeholder="Email do funcionário"
+              />
+              {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email}</p>}
+            </div>
+
+            {/* Senha */}
+            <div>
+              <label className="block text-gray-300 mb-2">Senha</label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
+                placeholder="Senha de acesso"
+              />
+              {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password}</p>}
+            </div>
+
+            {/* Cargo */}
+            <div className="md:col-span-2">
+              <label className="block text-gray-300 mb-2">Cargo</label>
+              <input
+                type="text"
+                value={formData.occupation}
+                onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
+                placeholder="Cargo do funcionário"
+              />
+              {errors.occupation && <p className="text-red-400 text-sm mt-1">{errors.occupation}</p>}
+            </div>
+
+            {/* Seletor de Departamento */}
+            <div className="md:col-span-2 relative">
+              <label className="block text-gray-300 mb-2">Departamento</label>
+              <div
+                className="flex items-center justify-between p-3 bg-gray-800 text-white rounded-md border border-gray-600 cursor-pointer"
+                onClick={() => setShowDepartments(!showDepartments)}
+              >
+                <span>
+                  {formData.departmentId
+                    ? filteredDepartments.find((d) => d.id === formData.departmentId)?.name || "Departamento não encontrado"
+                    : "Selecionar Departamento"}
+                </span>
+                {showDepartments ? <FaChevronUp /> : <FaChevronDown />}
               </div>
 
-              {/* Email */}
-              <div>
-                <label className="block text-gray-300 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
-                  placeholder="Email do funcionário"
-                />
-              </div>
-
-              {/* Senha */}
-              <div>
-                <label className="block text-gray-300 mb-2">Senha</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
-                  placeholder="Senha de acesso"
-                />
-              </div>
-
-              {/* Cargo */}
-              <div>
-                <label className="block text-gray-300 mb-2">Cargo</label>
-                <input
-                  type="text"
-                  value={occupation}
-                  onChange={(e) => setOccupation(e.target.value)}
-                  className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
-                  placeholder="Cargo do funcionário"
-                />
-              </div>
-
-              {/* Seletor de Departamento (Dropdown) */}
-              <div className="col-span-2 relative">
-                <label className="block text-gray-300 mb-2">Departamento</label>
-                <div
-                  className="flex items-center justify-between p-3 bg-gray-800 text-white rounded-md border border-gray-600 cursor-pointer"
-                  onClick={() => setShowDepartments(!showDepartments)}
+              {showDepartments && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute z-10 w-full bg-gray-800 rounded-md border border-gray-600 max-h-40 overflow-y-auto custom-scrollbar mt-2"
                 >
-                  <span>
-                    {departmentId
-                      ? filteredDepartments.find(d => d.id === departmentId)?.name || "Departamento não encontrado"
-                      : "Selecionar Departamento"}
-                  </span>
-                  {showDepartments ? <FaChevronUp /> : <FaChevronDown />}
-                </div>
-
-                {showDepartments && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute z-10 w-full bg-gray-800 rounded-md border border-gray-600 max-h-40 overflow-y-auto mt-2 custom-scrollbar"
-                  >
-                    {filteredDepartments.length > 0 ? (
-                      filteredDepartments.map((department) => (
-                        <div
-                          key={department.id}
-                          className="p-3 hover:bg-gray-700 cursor-pointer"
-                          onClick={() => {
-                            if (department.id) {
-                              setDepartmentId(department.id);
-                              setShowDepartments(false);
-                            }
-                          }}
-                        >
-                          {department.name}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-400 text-center p-3">Nenhum departamento encontrado.</p>
-                    )}
-                  </motion.div>
-                )}
-              </div>
+                  {filteredDepartments.map((department) => (
+                    <div
+                      key={department.id}
+                      className="p-3 hover:bg-gray-700 cursor-pointer"
+                      onClick={() => {
+                        setFormData({ ...formData, departmentId: department.id || "" });
+                        setShowDepartments(false);
+                      }}
+                    >
+                      {department.name}
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+              {errors.departmentId && <p className="text-red-400 text-sm mt-1">{errors.departmentId}</p>}
             </div>
           </div>
 
-          {/* Botão de Cadastro */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
-            className="w-full mt-6 flex items-center justify-center gap-2 bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition"
+            className="w-full mt-6 bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition"
             onClick={handleCreateUser}
           >
             <FaUserPlus /> Cadastrar Funcionário
           </motion.button>
         </div>
-
-        {/* 🔴 POPUP MODAL PARA ERRO */}
-        {error && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-gray-900 p-6 rounded-lg shadow-lg text-center">
-              <p className="text-red-400 text-lg">{error}</p>
-              <button
-                className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
-                onClick={() => setError(null)}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        )}
-
       </div>
     </DashboardLayout>
   );
