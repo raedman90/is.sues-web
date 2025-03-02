@@ -41,7 +41,7 @@ export default function SigninScreen() {
       } else {
         console.log("Usuário sem empresa/departamento. Redirecionando para cadastro.");
         signOut();
-        router.push(`/register?headid=${userid}`);
+        router.push(`/company/create?headid=${userid}`);
       }
     } catch (error) {
       setErrors({ form: "Credenciais inválidas. Tente novamente." });
