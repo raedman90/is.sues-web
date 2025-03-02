@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Issue } from "@/dtos/IssueDTO";
 import { FaExclamationCircle, FaCheckCircle, FaHourglassHalf } from "react-icons/fa";
 import { useAuth } from "@/app/hooks/useAuth";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface IssueItemProps {
   item: Issue;
@@ -21,6 +23,13 @@ const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
     return { label: "Aberta", color: "bg-green-500", icon: <FaExclamationCircle /> };
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Data inválida";
+  
+    const date = new Date(dateString);
+    return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
+  };
+
   const { label, color, icon } = getStatus();
 
   useEffect(() => {
@@ -34,7 +43,7 @@ const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
   return (
     <Link href={`/dashboard/issues/${item.id}`} className="block bg-[#6C717B] p-4 rounded-lg shadow-md hover:bg-[#555b63] transition">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-sm text-gray-300">Aberta em {item.createdAt}</span>
+      <span className="text-sm text-gray-300">Aberta em {formatDate(item.createdAt)}</span>
         <span className={`flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-md text-white ${color}`}>
           {icon} {label}
         </span>

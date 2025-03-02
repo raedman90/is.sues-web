@@ -3,12 +3,15 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/app/layouts/DashboardLayout";
 import { useIssues } from "@/app/contexts/IssuesContext";
+import { useAuth } from "@/app/hooks/useAuth";
 import IssuesList from "@/components/issues/IssuesList";
 import { Issue } from "@/dtos/IssueDTO";
 import { FaList, FaUserCheck } from "react-icons/fa";
 
+
 export default function Dashboard() {
   const { issues, loadIssues } = useIssues();
+  const { user } = useAuth(); // Pegamos os dados do usuário autenticado
 
   const [viewMode, setViewMode] = useState<"all" | "assigned">("all");
   const [filteredIssues, setFilteredIssues] = useState<Issue[]>([]);
@@ -23,8 +26,13 @@ export default function Dashboard() {
   useEffect(() => {
     let filtered: Issue[] = issues;
 
+    filtered = filtered.filter((issue) => {
+      if (user?.departmentId && issue.departmentId === user.departmentId) return true;
+      return false;
+    });
+
     if (viewMode === "assigned") {
-      filtered = issues.filter((issue) => issue.isAssigned);
+      filtered = filtered.filter((issue) => issue.isAssigned);
     }
 
     if (statusFilter !== "all") {
@@ -37,15 +45,15 @@ export default function Dashboard() {
     }
 
     setFilteredIssues(filtered);
-  }, [statusFilter, viewMode, issues]);
+  }, [statusFilter, viewMode, issues, user]);
 
   return (
     <DashboardLayout>
-      <div className="p-6 text-white flex flex-col h-full">
+      <div className="p-6 text-white flex flex-col h-full max-w-7xl mx-auto w-full">
         {/* Filtros no topo */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-4 md:space-y-0">
           {/* Botões de ViewMode (Todas e Assinadas) */}
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setViewMode("all")}
               className={`px-4 py-2 rounded-md flex items-center gap-2 transition ${
@@ -53,7 +61,7 @@ export default function Dashboard() {
               }`}
             >
               <FaList />
-              Todas ({issues.length})
+              Todas ({filteredIssues.length})
             </button>
             <button
               onClick={() => setViewMode("assigned")}
@@ -62,12 +70,12 @@ export default function Dashboard() {
               }`}
             >
               <FaUserCheck />
-              Assinadas ({issues.filter((issue) => issue.isAssigned).length})
+              Assinadas ({filteredIssues.filter((issue) => issue.isAssigned).length})
             </button>
           </div>
 
           {/* Filtros de Status */}
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setStatusFilter("open")}
               className={`px-4 py-2 rounded-md transition ${
