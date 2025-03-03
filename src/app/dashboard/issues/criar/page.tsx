@@ -58,16 +58,13 @@ export default function CreateIssue() {
   return (
     <DashboardLayout>
       <div className="p-6 text-white flex flex-col gap-6 h-full max-w-2xl mx-auto">
-        {/* Cabeçalho */}
         <div className="flex items-center gap-3 border-b border-gray-700 pb-4 w-full">
           <h1 className="text-2xl font-bold">Criar Nova Issue</h1>
         </div>
 
-        {/* Formulário */}
         <div className="bg-[#2A2D34] p-6 rounded-lg border border-gray-700 shadow-md w-full">
           {errors.form && <p className="text-red-400 text-sm mb-4">{errors.form}</p>}
 
-          {/* Título */}
           <div>
             <label className="block text-gray-300 mb-2">Título</label>
             <input
@@ -80,7 +77,6 @@ export default function CreateIssue() {
             {errors.title && <p className="text-red-400 text-sm">{errors.title}</p>}
           </div>
 
-          {/* Descrição */}
           <div className="mt-4">
             <label className="block text-gray-300 mb-2">Descrição</label>
             <textarea
@@ -92,7 +88,6 @@ export default function CreateIssue() {
             {errors.description && <p className="text-red-400 text-sm">{errors.description}</p>}
           </div>
 
-          {/* Botão de Criar */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}

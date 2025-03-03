@@ -7,7 +7,7 @@ import { FaExclamationCircle, FaCheckCircle, FaHourglassHalf } from "react-icons
 import { useAuth } from "@/app/hooks/useAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getAuthorIssue } from "@/api/issues"; // 🔹 Importando a função correta
+import { getAuthorIssue } from "@/api/issues";
 
 interface IssueItemProps {
   item: Issue;

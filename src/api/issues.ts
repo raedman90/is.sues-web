@@ -76,7 +76,7 @@ export const createIssues = async (issue: Issue) => {
 
     return response.data;
   } catch (error) {
-    console.error("Erro ao criar issue:", error.response?.data || error.message);
+    console.error("Erro ao criar issue:", error);
     throw error;
   }
 };

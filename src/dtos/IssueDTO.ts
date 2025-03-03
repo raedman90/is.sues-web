@@ -1,3 +1,4 @@
+import { LabelDto } from "./LabelDTO";
 export type Issue = {
     id?: string;
     title: string;
@@ -8,5 +9,4 @@ export type Issue = {
     createdAt?: string;
     departmentId?: string;
     assignedUserId?: String | null;
-
 }

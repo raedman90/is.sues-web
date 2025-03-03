@@ -101,6 +101,8 @@ export default function IssueDetails() {
   const isAuthor = issue.authorId === user?.id;
   const isAssignedUser = issue.assignedUserId === user?.id;
   const inProgress = issue.status;
+  const isSigned = issue.isAssigned;
+  const isSameDepartment = issue.departmentId === user?.departmentId;
 
   return (
     <DashboardLayout>
@@ -142,8 +144,8 @@ export default function IssueDetails() {
 
         {/* Ações */}
         <div className="flex flex-wrap gap-3 mt-6">
-          {/* Botão Editar Issue (Aparece apenas para o Autor) */}
-          {isAuthor && (
+          {/* O botão Editar some após assumir ou assinar a Issue */}
+          {isAuthor && !inProgress && !isSigned && (
             <button
               className="bg-blue-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleEditIssue}
@@ -153,8 +155,8 @@ export default function IssueDetails() {
             </button>
           )}
 
-          {/* Autor pode assumir sua própria issue */}
-          {!issue.isAssigned && isAuthor && (
+          {/* Qualquer membro do departamento pode assumir a Issue */}
+          {!issue.isAssigned && isSameDepartment && !inProgress && (
             <button
               className="bg-green-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-green-600 transition"
               onClick={handleAssumeIssue}
@@ -173,8 +175,8 @@ export default function IssueDetails() {
             </button>
           )}
 
-          {/* Botão Abandonar Issue (Somente se for o usuário atribuído) */}
-          {isAssignedUser && (
+          {/* O botão "Abandonar Issue" só aparece se a Issue ainda não foi assinada */}
+          {isAssignedUser && !isSigned && (
             <button
               className="bg-red-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-red-600 transition"
               onClick={handleDropIssue}
@@ -182,12 +184,6 @@ export default function IssueDetails() {
               <FaUserTimes /> Abandonar Issue
             </button>
           )}
-        </div>
-
-        {/* Seção de Comentários (Em breve) */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-300">Comentários (Em breve)</h2>
-          <p className="text-gray-500 text-sm">A funcionalidade de comentários será adicionada futuramente.</p>
         </div>
       </div>
     </DashboardLayout>

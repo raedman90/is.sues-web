@@ -7,7 +7,7 @@ import { useAuth } from "@/app/hooks/useAuth";
 import { useDepartment } from "@/app/hooks/useDepartment";
 import IssuesList from "@/components/issues/IssuesList";
 import { Issue } from "@/dtos/IssueDTO";
-import { FaList, FaUserCheck } from "react-icons/fa";
+import { FaList, FaUserCheck, FaRedoAlt } from "react-icons/fa";
 
 export default function Dashboard() {
   const { issues, loadIssues } = useIssues();
@@ -47,8 +47,7 @@ export default function Dashboard() {
 
     if (companyDepartments.length > 0) {
       filtered = filtered.filter((issue) => companyDepartments.includes(issue.departmentId || ""));
-    }
-    else if (user?.departmentId) {
+    } else if (user?.departmentId) {
       filtered = filtered.filter((issue) => issue.departmentId === user.departmentId);
     }
 
@@ -58,7 +57,7 @@ export default function Dashboard() {
 
     if (statusFilter !== "all") {
       filtered = filtered.filter((issue) => {
-        if (statusFilter === "open") return !issue.status;
+        if (statusFilter === "open") return !issue.isAssigned && !issue.status;
         if (statusFilter === "progress") return issue.status && !issue.isAssigned;
         if (statusFilter === "closed") return issue.isAssigned;
         return true;
@@ -67,6 +66,11 @@ export default function Dashboard() {
 
     setFilteredIssues(filtered);
   }, [statusFilter, viewMode, issues, user, companyDepartments]);
+
+  const handleResetFilters = () => {
+    setViewMode("all");
+    setStatusFilter("all");
+  };
 
   return (
     <DashboardLayout>
@@ -122,6 +126,13 @@ export default function Dashboard() {
               Concluídas
             </button>
           </div>
+
+          <button
+            onClick={handleResetFilters}
+            className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-md flex items-center gap-2 hover:bg-gray-700 transition"
+          >
+            <FaRedoAlt /> Resetar Filtros
+          </button>
         </div>
 
         {/* Lista de Issues com Scroll */}
