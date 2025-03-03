@@ -46,9 +46,11 @@ export const updateIssue = async (updateData: Issue) => {
       headers: { Authorization: token },
     });
 
-    return { status: response.status, data: response.data };
+    console.log("✅ Resposta da API após update:", response.data);
+
+    return response.data;
   } catch (error: any) {
-    console.error("Erro ao atualizar a issue:", error.response?.data || error.message);
+    console.error("❌ Erro ao atualizar a issue:", error.response?.data || error.message);
     throw error;
   }
 };

@@ -32,12 +32,10 @@ export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
   const loadIssues = async () => {
     try {
       const token = Cookies.get("token");
-  
       if (!token) {
         console.warn("Nenhum token encontrado. Ignorando a carga de issues.");
         return;
       }
-  
       const allIssues = await getIssues();
       setIssues(allIssues);
     } catch (error) {
@@ -60,7 +58,8 @@ export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
   // Cria uma nova issue
   const createNewIssue = async (issueData: Partial<Issue>) => {
     try {
-      await createIssues(issueData);
+      // É importante garantir que issueData contenha os campos necessários.
+      await createIssues(issueData as Issue);
       await loadIssues();
     } catch (error) {
       console.error("Erro ao criar issue:", error);

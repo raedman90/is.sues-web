@@ -13,54 +13,62 @@ export default function IssueDetails() {
   const { user } = useAuth();
   const { loadIssues } = useIssues();
   const { id } = useParams();
+  const router = useRouter();
+
   const [issue, setIssue] = useState<Issue | null>(null);
   const [loading, setLoading] = useState(true);
   const [authorName, setAuthorName] = useState<string>("Carregando...");
-  const router = useRouter();
+
+  // Função para carregar os dados mais recentes da issue
+  const fetchIssueData = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const fetchedIssue = await getIssue(id as string);
+      setIssue(fetchedIssue);
+
+      // Buscar nome do autor
+      const author = await getAuthorIssue(fetchedIssue.authorId);
+      setAuthorName(author || "Desconhecido");
+    } catch (error) {
+      console.error("Erro ao buscar a issue:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchIssueData() {
-      if (!id) return;
-      try {
-        const fetchedIssue = await getIssue(id as string);
-        setIssue(fetchedIssue);
-
-        // Buscar nome do autor pela API
-        const author = await getAuthorIssue(fetchedIssue.authorId);
-        setAuthorName(author || "Desconhecido");
-      } catch (error) {
-        console.error("Erro ao buscar a issue:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchIssueData();
-  }, [id, user]);
+  }, [id]);
 
   const handleEditIssue = () => {
-    if (!issue || !issue.id) return;
+    if (!issue?.id) return;
     router.push(`/dashboard/issues/${issue.id}/edit`);
   };
 
   const handleAssumeIssue = async () => {
     if (!issue) return;
     try {
-      const updatedIssue = { ...issue, status: true, assignedUserId: user?.id };
+      const updatedIssue = { ...issue, status: true, assignedUserId: user?.id, isAssigned: false };
+  
+      console.log("🛠️ Dados enviados para updateIssue:", updatedIssue);
+  
       await updateIssue(updatedIssue);
-      setIssue(updatedIssue);
-      loadIssues();
+      await fetchIssueData(); 
+      await loadIssues();
     } catch (error) {
-      console.error("Erro ao assumir a issue:", error);
+      console.error("❌ Erro ao assumir a issue:", error);
     }
   };
+  
+
 
   const handleAssignIssue = async () => {
     if (!issue) return;
     try {
-      const updatedIssue = { ...issue, isAssigned: true, status: true, assignedUserId: user?.id };
-      await updateIssue(updatedIssue);
-      setIssue(updatedIssue);
-      loadIssues();
+      await updateIssue({ ...issue, status: true, assignedUserId: user?.id, isAssigned: true });
+      await fetchIssueData(); 
+      await loadIssues();
     } catch (error) {
       console.error("Erro ao assinar a issue:", error);
     }
@@ -69,10 +77,9 @@ export default function IssueDetails() {
   const handleDropIssue = async () => {
     if (!issue) return;
     try {
-      const updatedIssue = { ...issue, status: false, assignedUserId: null };
-      await updateIssue(updatedIssue);
-      setIssue(updatedIssue);
-      loadIssues();
+      await updateIssue({ ...issue, status: false, assignedUserId: null, isAssigned: false });
+      await fetchIssueData();
+      await loadIssues();
     } catch (error) {
       console.error("Erro ao abandonar a issue:", error);
     }
@@ -97,12 +104,6 @@ export default function IssueDetails() {
       </DashboardLayout>
     );
   }
-
-  const isAuthor = issue.authorId === user?.id;
-  const isAssignedUser = issue.assignedUserId === user?.id;
-  const inProgress = issue.status;
-  const isSigned = issue.isAssigned;
-  const isSameDepartment = issue.departmentId === user?.departmentId;
 
   return (
     <DashboardLayout>
@@ -138,25 +139,24 @@ export default function IssueDetails() {
             )}
           </div>
         </div>
-
-        {/* Descrição */}
-        <p className="text-gray-300 bg-[#2D2F33] p-4 rounded-lg">{issue.description}</p>
+        {/* Descrição da Issue */}
+<div className="bg-[#2D2F33] p-4 rounded-lg mt-4">
+  <h2 className="text-xl font-semibold text-[#EAEAEA] mb-2">Descrição:</h2>
+  <p className="text-gray-300">{issue.description ? issue.description : "Sem descrição disponível."}</p>
+</div>
 
         {/* Ações */}
         <div className="flex flex-wrap gap-3 mt-6">
-          {/* O botão Editar some após assumir ou assinar a Issue */}
-          {isAuthor && !inProgress && !isSigned && (
+          {issue.authorId === user?.id && !issue.status && !issue.isAssigned && (
             <button
-              className="bg-blue-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-blue-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-blue-600 transition"
               onClick={handleEditIssue}
-              disabled={!issue.id}
             >
               <FaEdit /> Editar Issue
             </button>
           )}
 
-          {/* Qualquer membro do departamento pode assumir a Issue */}
-          {!issue.isAssigned && isSameDepartment && !inProgress && (
+          {!issue.status && issue.departmentId === user?.departmentId && (
             <button
               className="bg-green-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-green-600 transition"
               onClick={handleAssumeIssue}
@@ -165,24 +165,21 @@ export default function IssueDetails() {
             </button>
           )}
 
-          {/* O botão "Assinar Issue" só aparece depois que a Issue for assumida */}
-          {inProgress && isAssignedUser && !issue.isAssigned && (
-            <button
-              className="bg-purple-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-purple-600 transition"
-              onClick={handleAssignIssue}
-            >
-              <FaCheckCircle /> Assinar Issue
-            </button>
-          )}
-
-          {/* O botão "Abandonar Issue" só aparece se a Issue ainda não foi assinada */}
-          {isAssignedUser && !isSigned && (
-            <button
-              className="bg-red-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-red-600 transition"
-              onClick={handleDropIssue}
-            >
-              <FaUserTimes /> Abandonar Issue
-            </button>
+          {issue.status && issue.assignedUserId === user?.id && !issue.isAssigned && (
+            <>
+              <button
+                className="bg-purple-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-purple-600 transition"
+                onClick={handleAssignIssue}
+              >
+                <FaCheckCircle /> Assinar Issue
+              </button>
+              <button
+                className="bg-red-500 text-white px-5 py-2 rounded-md flex items-center gap-2 hover:bg-red-600 transition"
+                onClick={handleDropIssue}
+              >
+                <FaUserTimes /> Abandonar Issue
+              </button>
+            </>
           )}
         </div>
       </div>
