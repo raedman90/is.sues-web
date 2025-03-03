@@ -4,32 +4,53 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/app/layouts/DashboardLayout";
 import { useIssues } from "@/app/contexts/IssuesContext";
 import { useAuth } from "@/app/hooks/useAuth";
+import { useDepartment } from "@/app/hooks/useDepartment";
 import IssuesList from "@/components/issues/IssuesList";
 import { Issue } from "@/dtos/IssueDTO";
 import { FaList, FaUserCheck } from "react-icons/fa";
 
-
 export default function Dashboard() {
   const { issues, loadIssues } = useIssues();
-  const { user } = useAuth(); // Pegamos os dados do usuário autenticado
+  const { user } = useAuth();
+  const { departments, loadDepartments } = useDepartment();
 
   const [viewMode, setViewMode] = useState<"all" | "assigned">("all");
   const [filteredIssues, setFilteredIssues] = useState<Issue[]>([]);
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "progress" | "closed">("all");
+  const [companyDepartments, setCompanyDepartments] = useState<string[]>([]);
 
   useEffect(() => {
     if (issues.length === 0) {
       loadIssues();
     }
-  }, [issues, loadIssues]);
+
+    async function fetchDepartments() {
+      await loadDepartments();
+
+      const storedCompanyId = localStorage.getItem("companyId");
+
+      if (storedCompanyId) {
+        const filteredDepartments = departments
+          .filter((dept) => dept.companyId === storedCompanyId)
+          .map((dept) => dept.id)
+          .filter(Boolean) as string[];
+
+        setCompanyDepartments(filteredDepartments);
+      }
+    }
+
+    fetchDepartments();
+  }, [issues, loadIssues, departments, loadDepartments]);
 
   useEffect(() => {
     let filtered: Issue[] = issues;
 
-    filtered = filtered.filter((issue) => {
-      if (user?.departmentId && issue.departmentId === user.departmentId) return true;
-      return false;
-    });
+    if (companyDepartments.length > 0) {
+      filtered = filtered.filter((issue) => companyDepartments.includes(issue.departmentId || ""));
+    }
+    else if (user?.departmentId) {
+      filtered = filtered.filter((issue) => issue.departmentId === user.departmentId);
+    }
 
     if (viewMode === "assigned") {
       filtered = filtered.filter((issue) => issue.isAssigned);
@@ -45,7 +66,7 @@ export default function Dashboard() {
     }
 
     setFilteredIssues(filtered);
-  }, [statusFilter, viewMode, issues, user]);
+  }, [statusFilter, viewMode, issues, user, companyDepartments]);
 
   return (
     <DashboardLayout>

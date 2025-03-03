@@ -7,6 +7,7 @@ import { FaExclamationCircle, FaCheckCircle, FaHourglassHalf } from "react-icons
 import { useAuth } from "@/app/hooks/useAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getAuthorIssue } from "@/api/issues"; // 🔹 Importando a função correta
 
 interface IssueItemProps {
   item: Issue;
@@ -25,7 +26,7 @@ const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Data inválida";
-  
+
     const date = new Date(dateString);
     return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
   };
@@ -34,8 +35,15 @@ const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
 
   useEffect(() => {
     async function fetchUserName() {
-      // Simulação de busca pelo nome do autor (pode ser substituído por um fetch real)
-      setAuthorName(user?.name || "Desconhecido");
+      if (item.authorId) {
+        try {
+          const author = await getAuthorIssue(item.authorId);
+          setAuthorName(author);
+        } catch (error) {
+          console.error("Erro ao buscar autor da issue:", error);
+          setAuthorName("Desconhecido");
+        }
+      }
     }
     fetchUserName();
   }, [item.authorId]);
@@ -43,7 +51,7 @@ const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
   return (
     <Link href={`/dashboard/issues/${item.id}`} className="block bg-[#6C717B] p-4 rounded-lg shadow-md hover:bg-[#555b63] transition">
       <div className="flex justify-between items-center mb-2">
-      <span className="text-sm text-gray-300">Aberta em {formatDate(item.createdAt)}</span>
+        <span className="text-sm text-gray-300">Aberta em {formatDate(item.createdAt)}</span>
         <span className={`flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-md text-white ${color}`}>
           {icon} {label}
         </span>

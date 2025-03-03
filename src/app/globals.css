@@ -6,7 +6,11 @@
 * {
   font-family: "Poppins", sans-serif;
 }
-
+/* Definição de fundo global */
+body {
+  background-color: #1B1D21 !important; /* ✅ Adicionando !important para forçar a aplicação */
+  min-height: 100vh;
+}
 
 /* Estiliza a scrollbar da lista de departamentos */
 .custom-scrollbar::-webkit-scrollbar {

@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isOwner = !!userCompany;
 
   return (
-    <div className="flex h-screen bg-[#1B1D21] text-white font-[Poppins]">
+    <div className="flex h-screen text-white font-[Poppins]">
       {/* 📌 BOTÃO DE MENU PARA MOBILE */}
       <button 
         onClick={() => setMenuOpen(!menuOpen)} 
