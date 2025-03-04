@@ -23,6 +23,7 @@ export default function CompanyPage() {
 
   useEffect(() => {
     async function fetchCompanyData() {
+      if (!user) return;
       setLoading(true);
       let companyIdToFetch: string | null = null;
 
@@ -73,21 +74,22 @@ export default function CompanyPage() {
   useEffect(() => {
     async function fetchDepartments() {
       if (!company?.id) return;
-
+  
       try {
-        await loadDepartments();
-        const filteredDepartments = departments
-          .filter((dept) => dept.companyId === company.id)
-          .map((dept) => dept.name);
-
-        setCompanyDepartments(filteredDepartments);
+        await loadDepartments(); // Aguarde o carregamento dos departamentos
+        setCompanyDepartments(
+          departments
+            .filter((dept) => dept.companyId === company.id)
+            .map((dept) => dept.name)
+        );
       } catch (error) {
         console.error("❌ Erro ao carregar departamentos:", error);
       }
     }
-
+  
     fetchDepartments();
-  }, [company, departments, loadDepartments]);
+  }, [company, loadDepartments]); // Remova "departments" da dependência
+  
 
   if (loading) {
     return (

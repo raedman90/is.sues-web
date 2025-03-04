@@ -186,8 +186,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setTokenState(null);
     setUser(null);
     setCompanyId(null);
-    setDepartments([]);
-    setIssues([]);
     router.push("/");
   }
 
