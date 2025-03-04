@@ -49,51 +49,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   async function signIn(email: string, password: string): Promise<{ userData: UsersDto; companyId: string | null }> {
     try {
-      const response = await api.post("/signin", { email, password });
+        const response = await api.post("/signin", { email, password });
 
-      if (!response.data?.token || !response.data?.userAttempAuth) {
-        throw new Error("Resposta inválida da API. Nenhum token recebido.");
-      }
-
-      const { token, userAttempAuth } = response.data;
-      const userData: UsersDto = userAttempAuth;
-
-      let companyId: string | null = null;
-
-      try {
-        // Buscar a empresa apenas se o usuário for um "head"
-        const companyResponse = await api.get(`/company/head/${userData.id}`);
-        if (companyResponse.status === 200) {
-          companyId = companyResponse.data?.id || null;
+        if (!response.data?.token || !response.data?.userAttempAuth) {
+            throw new Error("Resposta inválida da API. Nenhum token recebido.");
         }
-      } catch (error: any) {
-        if (error.response && error.response.status === 404) {
-          console.log("Nenhuma empresa encontrada para este usuário.");
-        } else {
-          console.error("Erro ao buscar empresa:", error);
+
+        const { token, userAttempAuth } = response.data;
+        const userData: UsersDto = userAttempAuth;
+
+        let companyId: string | null = null;
+
+        // Somente buscar empresa se o usuário for administrador (head)
+        if (userData.adm) {
+            try {
+                const companyResponse = await api.get(`/company/head/${userData.id}`);
+                if (companyResponse.status === 200) {
+                    companyId = companyResponse.data?.id || null;
+                }
+            } catch (error: any) {
+                if (error.response && error.response.status === 404) {
+                    console.log("Nenhuma empresa encontrada para este usuário.");
+                } else {
+                    console.error("Erro ao buscar empresa:", error);
+                }
+            }
         }
-      }
 
-      // Salvar o token em um Cookie (Expira em 7 dias)
-      Cookies.set("token", token, { expires: 7 });
+        // Salvar o token em um Cookie (Expira em 7 dias)
+        Cookies.set("token", token, { expires: 7 });
 
-      // Salvar o usuário no LocalStorage para uso no Frontend
-      localStorage.setItem("user", JSON.stringify(userData));
-      if (companyId) localStorage.setItem("companyId", companyId);
-      else localStorage.removeItem("companyId");
+        // Salvar o usuário no LocalStorage para uso no Frontend
+        localStorage.setItem("user", JSON.stringify(userData));
+        if (companyId) localStorage.setItem("companyId", companyId);
+        else localStorage.removeItem("companyId");
 
-      setTokenState(token);
-      setUser(userData);
-      setCompanyId(companyId);
+        setTokenState(token);
+        setUser(userData);
+        setCompanyId(companyId);
 
-      console.log("Login bem-sucedido:", userData);
+        console.log("Login bem-sucedido:", userData);
 
-      return { userData, companyId };
+        return { userData, companyId };
     } catch (error) {
-      console.error("Erro ao fazer login:", error);
-      throw new Error("Erro ao fazer login. Verifique suas credenciais.");
+        console.error("Erro ao fazer login:", error);
+        throw new Error("Erro ao fazer login. Verifique suas credenciais.");
     }
 }
+
 
   
 
