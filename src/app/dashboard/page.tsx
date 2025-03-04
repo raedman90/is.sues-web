@@ -28,13 +28,13 @@ export default function Dashboard() {
         await loadDepartments();
         await loadIssues();
   
-        // 🔹 Obtém todos os departamentos disponíveis
+        // Obtém todos os departamentos disponíveis
         const allDepartments = await getAllDepartments();
         const userDepartment = allDepartments.find((dept) => dept.id === user.departmentId);
   
         if (!userDepartment) return;
   
-        // 🔹 Filtra os departamentos pertencentes à mesma empresa
+        // Filtra os departamentos pertencentes à mesma empresa
         const companyDepartments = allDepartments
           .filter((dept) => dept.companyId === userDepartment.companyId)
           .map((dept) => dept.id);
@@ -51,17 +51,17 @@ export default function Dashboard() {
   useEffect(() => {
     let filtered: Issue[] = issues;
   
-    // 🔹 Filtra as issues que pertencem à empresa do usuário
+    // Filtra as issues que pertencem à empresa do usuário
     if (companyDepartments.length > 0) {
       filtered = filtered.filter((issue) => companyDepartments.includes(issue.departmentId || ""));
     }
   
-    // 🔹 Filtra por issues atribuídas
+    // Filtra por issues atribuídas
     if (viewMode === "assigned") {
       filtered = filtered.filter((issue) => issue.isAssigned);
     }
   
-    // 🔹 Filtra por status da issue
+    // Filtra por status da issue
     if (statusFilter !== "all") {
       filtered = filtered.filter((issue) => {
         if (statusFilter === "open") return !issue.isAssigned && !issue.status;

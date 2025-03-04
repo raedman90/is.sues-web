@@ -8,17 +8,17 @@ export function middleware(req: NextRequest) {
   const authRoutes = ["/login", "/register", "/"];
   const dashboardRoutes = ["/dashboard"];
 
-  console.log("🔹 Token encontrado:", token);
-  console.log("🔹 Caminho atual:", req.nextUrl.pathname);
+  console.log("Token encontrado:", token);
+  console.log("Caminho atual:", req.nextUrl.pathname);
 
   if (!token) {
     if (authRoutes.includes(req.nextUrl.pathname)) {
-      console.log("✅ Usuário NÃO autenticado - Permissão concedida:", req.nextUrl.pathname);
+      console.log("Usuário NÃO autenticado - Permissão concedida:", req.nextUrl.pathname);
       return NextResponse.next();
     }
 
     if (dashboardRoutes.some(route => req.nextUrl.pathname.startsWith(route))) {
-      console.warn("🔴 Usuário NÃO autenticado - Redirecionando para /login");
+      console.warn("Usuário NÃO autenticado - Redirecionando para /login");
       return NextResponse.redirect(new URL("/login", req.url));
     }
   }
@@ -28,7 +28,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  console.log("✅ Usuário pode acessar:", req.nextUrl.pathname);
+  console.log("Usuário pode acessar:", req.nextUrl.pathname);
   return NextResponse.next();
 }
 

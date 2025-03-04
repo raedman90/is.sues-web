@@ -36,9 +36,18 @@ export const getCompanyDepartment = async (departmentId: string): Promise<string
   }
 };
 // Buscar TODOS os departamentos
-export const getAllDepartments = async (): Promise<{ id: string; name: string; companyId: string }[]> => {
+export const getAllDepartments = async (): Promise<DepartmentDto[]> => {
   try {
-    const response = await api.get("/departments/all");
+    const token = authenticateUser();
+    if (!token) {
+      console.warn("Tentativa de carregar departamentos sem token. Requisição cancelada.");
+      return [];
+    }
+
+    const response = await api.get("/departments/all", {
+      headers: { Authorization: token },
+    });
+
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar departamentos:", error);

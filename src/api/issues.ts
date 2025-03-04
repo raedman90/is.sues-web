@@ -6,7 +6,10 @@ import authenticateUser from "./apiAuth";
 export const getIssues = async (): Promise<Issue[]> => {
   try {
     const token = authenticateUser();
-    if (!token) throw new Error("Token não encontrado");
+    if (!token) {
+      console.warn("Tentativa de carregar issues sem token. Requisição cancelada.");
+      return []; 
+    }
 
     const response = await api.get("/issues", {
       headers: { Authorization: token },
@@ -15,9 +18,10 @@ export const getIssues = async (): Promise<Issue[]> => {
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar issues:", error);
-    throw error;
+    return [];
   }
 };
+
 
 // Buscar uma issue pelo ID
 export const getIssue = async (id: string): Promise<Issue> => {
@@ -46,7 +50,7 @@ export const updateIssue = async (updateData: Issue) => {
       headers: { Authorization: token },
     });
 
-    console.log("✅ Resposta da API após update:", response.data);
+    console.log("Resposta da API após update:", response.data);
 
     return response.data;
   } catch (error: any) {

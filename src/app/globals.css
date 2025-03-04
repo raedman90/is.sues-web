@@ -8,7 +8,7 @@
 }
 /* Definição de fundo global */
 body {
-  background-color: #1B1D21 !important; /* ✅ Adicionando !important para forçar a aplicação */
+  background-color: #1B1D21 !important;
   min-height: 100vh;
 }
 

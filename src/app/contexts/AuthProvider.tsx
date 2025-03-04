@@ -4,7 +4,6 @@ import { createContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/api/apiClient";
 import Cookies from "js-cookie";
-import axios from "axios";
 import { UsersDto } from "@/dtos/UserDTO";
 
 interface AuthContextData {
@@ -60,33 +59,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userData: UsersDto = userAttempAuth;
 
       let companyId: string | null = null;
+
       try {
+        // Buscar a empresa apenas se o usuário for um "head"
         const companyResponse = await api.get(`/company/head/${userData.id}`);
-        companyId = companyResponse.data?.id || null;
-      } catch {
-        console.log("Nenhuma empresa encontrada para este usuário.");
+        if (companyResponse.status === 200) {
+          companyId = companyResponse.data?.id || null;
+        }
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          console.log("Nenhuma empresa encontrada para este usuário.");
+        } else {
+          console.error("Erro ao buscar empresa:", error);
+        }
       }
 
-      //  Salvar o token em um Cookie (Expira em 7 dias)
+      // Salvar o token em um Cookie (Expira em 7 dias)
       Cookies.set("token", token, { expires: 7 });
 
       // Salvar o usuário no LocalStorage para uso no Frontend
       localStorage.setItem("user", JSON.stringify(userData));
       if (companyId) localStorage.setItem("companyId", companyId);
+      else localStorage.removeItem("companyId");
 
-      // Atualizar o contexto de autenticação
       setTokenState(token);
       setUser(userData);
       setCompanyId(companyId);
 
-      console.log("✅ Login bem-sucedido:", userData);
+      console.log("Login bem-sucedido:", userData);
 
       return { userData, companyId };
     } catch (error) {
-      console.error("❌ Erro ao fazer login:", error);
+      console.error("Erro ao fazer login:", error);
       throw new Error("Erro ao fazer login. Verifique suas credenciais.");
     }
-  }
+}
+
   
 
   async function signUp(
@@ -178,6 +186,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setTokenState(null);
     setUser(null);
     setCompanyId(null);
+    setDepartments([]);
+    setIssues([]);
     router.push("/");
   }
 
@@ -187,3 +197,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+function setDepartments(arg0: never[]) {
+  throw new Error("Function not implemented.");
+}
+
+function setIssues(arg0: never[]) {
+  throw new Error("Function not implemented.");
+}
+

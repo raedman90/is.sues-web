@@ -53,7 +53,7 @@ export default function EditEmployees() {
     if (companyId) {
       fetchData();
     }
-  }, [companyId, departments.length]); // 🔹 Atualiza corretamente ao carregar os departamentos
+  }, [companyId, departments.length]); // Atualiza corretamente ao carregar os departamentos
 
   const handleSaveEmployee = async () => {
     if (!selectedEmployee) return;

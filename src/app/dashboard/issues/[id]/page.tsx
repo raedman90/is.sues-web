@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useIssues } from "@/app/contexts/IssuesContext";
-import { useComments } from "@/app/hooks/useComments"; // ✅ Importação do Hook de Comentários
+import { useComments } from "@/app/hooks/useComments";
 import DashboardLayout from "@/app/layouts/DashboardLayout";
 import { getIssue, updateIssue, getAuthorIssue } from "@/api/issues";
 import { FaCheckCircle, FaEdit, FaUserTimes, FaSignInAlt, FaClock, FaComment, FaPaperPlane, FaUser } from "react-icons/fa";

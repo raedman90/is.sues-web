@@ -6,7 +6,6 @@ import { Issue } from "@/dtos/IssueDTO";
 import { useAuth } from "@/app/hooks/useAuth";
 import { getMyIssues } from "@/api/apiUser";
 import { getAllDepartments } from "@/api/department";
-import Cookies from "js-cookie";
 
 type IssuesContextData = {
   issues: Issue[];
@@ -34,16 +33,16 @@ export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
     if (!user?.departmentId) return;
   
     try {
-      // 🔹 Obtém todos os departamentos disponíveis
+      // Obtém todos os departamentos disponíveis
       const departments = await getAllDepartments();
       const userDepartment = departments.find((dept) => dept.id === user.departmentId);
       if (!userDepartment) return;
   
-      // 🔹 Filtra os departamentos que pertencem à empresa do usuário
+      // Filtra os departamentos que pertencem à empresa do usuário
       const companyDepartments = departments.filter((dept) => dept.companyId === userDepartment.companyId);
       const departmentIds = companyDepartments.map((dept) => dept.id);
   
-      // 🔹 Busca todas as issues e filtra para pegar somente as da empresa
+      // Busca todas as issues e filtra para pegar somente as da empresa
       const allIssues = await getIssues();
       const filteredIssues = allIssues.filter((issue) => issue.departmentId && departmentIds.includes(issue.departmentId));
   
