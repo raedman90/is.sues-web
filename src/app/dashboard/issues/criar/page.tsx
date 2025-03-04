@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/app/layouts/DashboardLayout";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useIssues } from "@/app/contexts/IssuesContext";
 import { issueSchema } from "@/app/schemas/issueSchema";
 import { motion } from "framer-motion";
 import { createIssues } from "@/api/issues";
+import { getAllDepartments } from "@/api/department";
 import { Issue } from "@/dtos/IssueDTO";
 import { useRouter } from "next/navigation";
 
@@ -15,15 +16,39 @@ export default function CreateIssue() {
   const { loadIssues } = useIssues();
   const router = useRouter();
 
+  const [companyDepartments, setCompanyDepartments] = useState<{ id: string; name: string }[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    departmentId: user?.departmentId ?? "",
+    departmentId: "",
     authorId: user?.id ?? "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function fetchDepartments() {
+      if (!user?.departmentId) return;
+
+      try {
+        const allDepartments = await getAllDepartments();
+        const userCompanyId = allDepartments.find((dept) => dept.id === user.departmentId)?.companyId;
+
+        if (!userCompanyId) {
+          console.warn("⚠️ Usuário não pertence a uma empresa.");
+          return;
+        }
+
+        const filteredDepartments = allDepartments.filter((dept) => dept.companyId === userCompanyId);
+        setCompanyDepartments(filteredDepartments);
+      } catch (error) {
+        console.error("❌ Erro ao carregar departamentos:", error);
+      }
+    }
+
+    fetchDepartments();
+  }, [user?.departmentId]);
 
   const handleCreateIssue = async () => {
     setErrors({});
@@ -65,6 +90,7 @@ export default function CreateIssue() {
         <div className="bg-[#2A2D34] p-6 rounded-lg border border-gray-700 shadow-md w-full">
           {errors.form && <p className="text-red-400 text-sm mb-4">{errors.form}</p>}
 
+          {/* Campo de Título */}
           <div>
             <label className="block text-gray-300 mb-2">Título</label>
             <input
@@ -77,6 +103,7 @@ export default function CreateIssue() {
             {errors.title && <p className="text-red-400 text-sm">{errors.title}</p>}
           </div>
 
+          {/* Campo de Descrição */}
           <div className="mt-4">
             <label className="block text-gray-300 mb-2">Descrição</label>
             <textarea
@@ -88,6 +115,25 @@ export default function CreateIssue() {
             {errors.description && <p className="text-red-400 text-sm">{errors.description}</p>}
           </div>
 
+          {/* Campo para Selecionar Departamento */}
+          <div className="mt-4">
+            <label className="block text-gray-300 mb-2">Departamento Responsável</label>
+            <select
+              value={formData.departmentId}
+              onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+              className="w-full p-3 bg-gray-800 text-white rounded-md border border-gray-600 focus:border-blue-500 outline-none"
+            >
+              <option value="">Selecione um departamento</option>
+              {companyDepartments.map((dept) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+            {errors.departmentId && <p className="text-red-400 text-sm">{errors.departmentId}</p>}
+          </div>
+
+          {/* Botão Criar Issue */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}

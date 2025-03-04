@@ -5,6 +5,7 @@ import { getIssues, updateIssue, createIssues, getAuthorIssue } from "@/api/issu
 import { Issue } from "@/dtos/IssueDTO";
 import { useAuth } from "@/app/hooks/useAuth";
 import { getMyIssues } from "@/api/apiUser";
+import { getAllDepartments } from "@/api/department";
 import Cookies from "js-cookie";
 
 type IssuesContextData = {
@@ -30,14 +31,23 @@ export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
 
   // Carrega todas as issues
   const loadIssues = async () => {
+    if (!user?.departmentId) return;
+  
     try {
-      const token = Cookies.get("token");
-      if (!token) {
-        console.warn("Nenhum token encontrado. Ignorando a carga de issues.");
-        return;
-      }
+      // 🔹 Obtém todos os departamentos disponíveis
+      const departments = await getAllDepartments();
+      const userDepartment = departments.find((dept) => dept.id === user.departmentId);
+      if (!userDepartment) return;
+  
+      // 🔹 Filtra os departamentos que pertencem à empresa do usuário
+      const companyDepartments = departments.filter((dept) => dept.companyId === userDepartment.companyId);
+      const departmentIds = companyDepartments.map((dept) => dept.id);
+  
+      // 🔹 Busca todas as issues e filtra para pegar somente as da empresa
       const allIssues = await getIssues();
-      setIssues(allIssues);
+      const filteredIssues = allIssues.filter((issue) => issue.departmentId && departmentIds.includes(issue.departmentId));
+  
+      setIssues(filteredIssues);
     } catch (error) {
       console.error("Erro ao carregar issues:", error);
     }

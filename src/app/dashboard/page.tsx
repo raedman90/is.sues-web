@@ -8,6 +8,7 @@ import { useDepartment } from "@/app/hooks/useDepartment";
 import IssuesList from "@/components/issues/IssuesList";
 import { Issue } from "@/dtos/IssueDTO";
 import { FaList, FaUserCheck, FaRedoAlt } from "react-icons/fa";
+import { getAllDepartments } from "@/api/department";
 
 export default function Dashboard() {
   const { issues, loadIssues } = useIssues();
@@ -20,41 +21,47 @@ export default function Dashboard() {
   const [companyDepartments, setCompanyDepartments] = useState<string[]>([]);
 
   useEffect(() => {
-    if (issues.length === 0) {
-      loadIssues();
-    }
-
-    async function fetchDepartments() {
-      await loadDepartments();
-
-      const storedCompanyId = localStorage.getItem("companyId");
-
-      if (storedCompanyId) {
-        const filteredDepartments = departments
-          .filter((dept) => dept.companyId === storedCompanyId)
-          .map((dept) => dept.id)
-          .filter(Boolean) as string[];
-
-        setCompanyDepartments(filteredDepartments);
+    async function fetchData() {
+      if (!user?.departmentId) return;
+  
+      try {
+        await loadDepartments();
+        await loadIssues();
+  
+        // 🔹 Obtém todos os departamentos disponíveis
+        const allDepartments = await getAllDepartments();
+        const userDepartment = allDepartments.find((dept) => dept.id === user.departmentId);
+  
+        if (!userDepartment) return;
+  
+        // 🔹 Filtra os departamentos pertencentes à mesma empresa
+        const companyDepartments = allDepartments
+          .filter((dept) => dept.companyId === userDepartment.companyId)
+          .map((dept) => dept.id);
+  
+        setCompanyDepartments(companyDepartments);
+      } catch (error) {
+        console.error("Erro ao carregar departamentos e issues:", error);
       }
     }
-
-    fetchDepartments();
-  }, [issues, loadIssues, departments, loadDepartments]);
+  
+    fetchData();
+  }, [user, loadDepartments, loadIssues]);
 
   useEffect(() => {
     let filtered: Issue[] = issues;
-
+  
+    // 🔹 Filtra as issues que pertencem à empresa do usuário
     if (companyDepartments.length > 0) {
       filtered = filtered.filter((issue) => companyDepartments.includes(issue.departmentId || ""));
-    } else if (user?.departmentId) {
-      filtered = filtered.filter((issue) => issue.departmentId === user.departmentId);
     }
-
+  
+    // 🔹 Filtra por issues atribuídas
     if (viewMode === "assigned") {
       filtered = filtered.filter((issue) => issue.isAssigned);
     }
-
+  
+    // 🔹 Filtra por status da issue
     if (statusFilter !== "all") {
       filtered = filtered.filter((issue) => {
         if (statusFilter === "open") return !issue.isAssigned && !issue.status;
@@ -63,9 +70,9 @@ export default function Dashboard() {
         return true;
       });
     }
-
+  
     setFilteredIssues(filtered);
-  }, [statusFilter, viewMode, issues, user, companyDepartments]);
+  }, [statusFilter, viewMode, issues, companyDepartments]);
 
   const handleResetFilters = () => {
     setViewMode("all");

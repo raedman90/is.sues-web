@@ -3,11 +3,12 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Issue } from "@/dtos/IssueDTO";
-import { FaExclamationCircle, FaCheckCircle, FaHourglassHalf } from "react-icons/fa";
+import { FaExclamationCircle, FaCheckCircle, FaHourglassHalf, FaBuilding } from "react-icons/fa";
 import { useAuth } from "@/app/hooks/useAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getAuthorIssue } from "@/api/issues";
+import { getDepartmentName } from "@/api/department";
 
 interface IssueItemProps {
   item: Issue;
@@ -15,6 +16,7 @@ interface IssueItemProps {
 
 const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
   const [authorName, setAuthorName] = useState<string>("Carregando...");
+  const [departmentName, setDepartmentName] = useState<string>("Carregando...");
   const { user } = useAuth();
 
   // Define a cor e o ícone com base no status da Issue
@@ -26,7 +28,6 @@ const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Data inválida";
-
     const date = new Date(dateString);
     return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
   };
@@ -34,19 +35,26 @@ const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
   const { label, color, icon } = getStatus();
 
   useEffect(() => {
-    async function fetchUserName() {
-      if (item.authorId) {
-        try {
+    async function fetchIssueDetails() {
+      try {
+        if (item.authorId) {
           const author = await getAuthorIssue(item.authorId);
           setAuthorName(author);
-        } catch (error) {
-          console.error("Erro ao buscar autor da issue:", error);
-          setAuthorName("Desconhecido");
         }
+
+        if (item.departmentId) {
+          const department = await getDepartmentName(item.departmentId);
+          setDepartmentName(department);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar detalhes da issue:", error);
+        setAuthorName("Desconhecido");
+        setDepartmentName("Não definido");
       }
     }
-    fetchUserName();
-  }, [item.authorId]);
+
+    fetchIssueDetails();
+  }, [item.authorId, item.departmentId]);
 
   return (
     <Link href={`/dashboard/issues/${item.id}`} className="block bg-[#6C717B] p-4 rounded-lg shadow-md hover:bg-[#555b63] transition">
@@ -60,9 +68,12 @@ const IssueItem: React.FC<IssueItemProps> = ({ item }) => {
       <h3 className="text-lg font-semibold text-white mb-1">{item.title}</h3>
       <p className="text-gray-300 text-sm">{item.description}</p>
 
+      {/* Exibição do nome do departamento designado */}
       <div className="mt-3 flex justify-between text-sm text-gray-400">
         <span>Por {authorName}</span>
-        {item.isAssigned && <span className="text-blue-300">Atribuído</span>}
+        <span className="flex items-center gap-2">
+          <FaBuilding className="text-gray-400" /> {departmentName}
+        </span>
       </div>
     </Link>
   );

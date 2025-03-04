@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const companyResponse = await api.get(`/company/head/${userData.id}`);
         companyId = companyResponse.data?.id || null;
       } catch {
-        console.warn("Nenhuma empresa encontrada para este usuário.");
+        console.log("Nenhuma empresa encontrada para este usuário.");
       }
 
       //  Salvar o token em um Cookie (Expira em 7 dias)
