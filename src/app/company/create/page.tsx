@@ -35,7 +35,6 @@ export default function CreateCompany() {
     setErrors({});
     setLoading(true);
   
-    // Convertendo null para undefined para compatibilidade com CompanyDto
     const sanitizedFormData = {
       ...formData,
       latitude: formData.latitude ?? undefined,

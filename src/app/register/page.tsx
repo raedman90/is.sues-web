@@ -107,7 +107,9 @@ export default function SignupScreen() {
             <label htmlFor="admin" className="text-sm text-gray-400">
               Você é um administrador?
             </label>
+            
           </div>
+          {errors.isAdmin && <p className="text-red-400 text-sm">{errors.isAdmin}</p>}
 
           <motion.button
             whileHover={{ scale: 1.05 }}

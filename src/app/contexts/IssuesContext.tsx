@@ -30,19 +30,37 @@ export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
 
   // Carrega todas as issues
   const loadIssues = async () => {
-    if (!user?.departmentId) return;
+    if (!user) return;
   
     try {
-      // Obtém todos os departamentos disponíveis
       const departments = await getAllDepartments();
-      const userDepartment = departments.find((dept) => dept.id === user.departmentId);
-      if (!userDepartment) return;
+      let departmentIds: string[] = [];
   
-      // Filtra os departamentos que pertencem à empresa do usuário
-      const companyDepartments = departments.filter((dept) => dept.companyId === userDepartment.companyId);
-      const departmentIds = companyDepartments.map((dept) => dept.id);
+      if (user.adm) {
+        // Se for dono da empresa, buscar a empresa vinculada ao usuário
+        const userCompanyId = localStorage.getItem("companyId");
+        if (userCompanyId) {
+          departmentIds = departments
+            .filter((dept) => dept.companyId === userCompanyId)
+            .map((dept) => dept.id)
+            .filter((id): id is string => !!id);
+        }
+      } else if (user.departmentId) {
+        const userDepartment = departments.find((dept) => dept.id === user.departmentId);
+        if (userDepartment) {
+          departmentIds = departments
+            .filter((dept) => dept.companyId === userDepartment.companyId)
+            .map((dept) => dept.id)
+            .filter((id): id is string => !!id);
+        }
+      }
   
-      // Busca todas as issues e filtra para pegar somente as da empresa
+      if (departmentIds.length === 0) {
+        console.warn("Nenhum departamento encontrado para carregar issues.");
+        setIssues([]);
+        return;
+      }
+  
       const allIssues = await getIssues();
       const filteredIssues = allIssues.filter((issue) => issue.departmentId && departmentIds.includes(issue.departmentId));
   
@@ -51,7 +69,7 @@ export const IssuesProvider: React.FC<IssuesProviderProps> = ({ children }) => {
       console.error("Erro ao carregar issues:", error);
     }
   };
-
+  
   // Carrega as issues do usuário logado
   const loadMyIssues = async () => {
     try {

@@ -22,24 +22,36 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!user?.departmentId) return;
+      if (!user) return;
   
       try {
         await loadDepartments();
         await loadIssues();
   
-        // Obtém todos os departamentos disponíveis
         const allDepartments = await getAllDepartments();
-        const userDepartment = allDepartments.find((dept) => dept.id === user.departmentId);
+        let companyDeptIds: string[] = [];
   
-        if (!userDepartment) return;
+        if (user.adm) {
+          // 🔍 Se for dono da empresa, buscar a empresa vinculada ao usuário
+          const userCompanyId = localStorage.getItem("companyId"); // Assumindo que salvamos no login
+          if (userCompanyId) {
+            companyDeptIds = allDepartments
+              .filter((dept) => dept.companyId === userCompanyId)
+              .map((dept) => dept.id)
+              .filter((id): id is string => !!id);
+          }
+        } else if (user.departmentId) {
+          // 🔍 Se for funcionário, buscar os departamentos da empresa do seu departamento
+          const userDepartment = allDepartments.find((dept) => dept.id === user.departmentId);
+          if (userDepartment) {
+            companyDeptIds = allDepartments
+              .filter((dept) => dept.companyId === userDepartment.companyId)
+              .map((dept) => dept.id)
+              .filter((id): id is string => !!id);
+          }
+        }
   
-        // Filtra os departamentos pertencentes à mesma empresa
-        const companyDepartments = allDepartments
-          .filter((dept) => dept.companyId === userDepartment.companyId)
-          .map((dept) => dept.id);
-  
-        setCompanyDepartments(companyDepartments);
+        setCompanyDepartments(companyDeptIds);
       } catch (error) {
         console.error("Erro ao carregar departamentos e issues:", error);
       }
@@ -51,17 +63,21 @@ export default function Dashboard() {
   useEffect(() => {
     let filtered: Issue[] = issues;
   
-    // Filtra as issues que pertencem à empresa do usuário
+    // 🔍 Se for dono da empresa, exibir todas as issues da empresa
+    if (user?.adm) {
+      setFilteredIssues(issues);
+      return;
+    }
+  
+    // Se for funcionário, filtrar pelos departamentos
     if (companyDepartments.length > 0) {
       filtered = filtered.filter((issue) => companyDepartments.includes(issue.departmentId || ""));
     }
   
-    // Filtra por issues atribuídas
     if (viewMode === "assigned") {
       filtered = filtered.filter((issue) => issue.isAssigned);
     }
   
-    // Filtra por status da issue
     if (statusFilter !== "all") {
       filtered = filtered.filter((issue) => {
         if (statusFilter === "open") return !issue.isAssigned && !issue.status;
@@ -72,7 +88,7 @@ export default function Dashboard() {
     }
   
     setFilteredIssues(filtered);
-  }, [statusFilter, viewMode, issues, companyDepartments]);
+  }, [statusFilter, viewMode, issues, companyDepartments, user]);
 
   const handleResetFilters = () => {
     setViewMode("all");

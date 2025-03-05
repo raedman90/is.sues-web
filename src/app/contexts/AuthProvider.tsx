@@ -89,6 +89,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setCompanyId(companyId);
 
         console.log("Login bem-sucedido:", userData);
+        console.log("Company:", companyId);
+        console.log("token:", token);
 
         return { userData, companyId };
     } catch (error) {

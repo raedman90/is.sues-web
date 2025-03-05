@@ -7,7 +7,7 @@ export const signupSchema = z
     occupation: z.string().min(2, "O cargo deve ter pelo menos 2 caracteres"),
     password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
     confirmPassword: z.string().min(6, "A confirmação de senha deve ter pelo menos 6 caracteres"),
-    isAdmin: z.boolean().optional(),
+    isAdmin: z.literal(true, { message: "É obrigatório marcar a opção de administrador." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",
